@@ -1,7 +1,5 @@
 <?php
 
-require_once('read-params.php');
-
 class DLClient {
 
     private $authKey;
@@ -49,6 +47,10 @@ class DLClient {
             $url = $this->addUrlSeparator($url);
             $url .= 'fields=' . urlencode($this->array2str($params->fields));
         }
+        if ($params !== NULL && $params->filter !== NULL) {
+            $url = $this->addUrlSeparator($url);
+            $url .= 'filter=' . urlencode($params->filter);
+        }
         if ($params !== NULL && $params->limit !== NULL) {
             $url = $this->addUrlSeparator($url);
             $url .= 'limit=' . urlencode($params->limit);
@@ -71,7 +73,7 @@ class DLClient {
 
     private function addUrlSeparator($url) {
 
-        if (strpos($url, '?') !== FALSE) {
+        if (strpos($url, '?') !== false) {
             $url .= '&';
         } else {
             $url .= '?';

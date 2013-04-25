@@ -1,5 +1,4 @@
 <?php
-//namespace Datalanche;
 
 class DLFilter {
 
