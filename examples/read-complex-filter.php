@@ -2,20 +2,26 @@
 
 require_once(dirname(__FILE__) . '/../Datalanche.php');
 
-$apiKey = '16YNL0N2QVS9kx2y07MgcA==';//'your_api_key';
-$apiSecret = '';//'your_api_secret';
+$apiKey = 'your_api_key';
+$apiSecret = 'your_api_secret';
 
 try {
-    $client = new DLClient($apiKey, $apiSecret, 'localhost', 4001, false);
+    $client = new DLClient($apiKey, $apiSecret);
+
+    $f1 = new DLFilter();
+    $f1->field('dosage_form')->equals('capsule');
+
+    $f2 = new DLFilter();
+    $f2->field('dosage_form')->equals('tablet');
+
+    $f3 = new DLFilter();
+    $f3->boolOr(array($f1, $f2));
+
+    $f4 = new DLFilter();
+    $f4->field('product_type')->contains('esc');
 
     $readFilter = new DLFilter();
-    $readFilter->boolAnd(array(
-        new DLFilter()->boolOr(array(
-            new DLFilter()->field('dosage_form')->equals('capsule'),
-            new DLFilter()->field('dosage_form')->equals('tablet')
-        )),
-        new DLFilter()->field('product_type')->contains('esc')
-    ));
+    $readFilter->boolAnd(array($f3, $f4));
 
     $params = new DLReadParams();
     $params->dataset = 'medical_codes_ndc';

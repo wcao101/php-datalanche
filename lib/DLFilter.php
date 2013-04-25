@@ -34,10 +34,10 @@ class DLFilter {
             $jsonList = array();
             for ($i = 0; $i < count($this->filters); $i++) {
                 $item = NULL;
-                if ($this->filters[i] instanceof DLFilter) {
-                    $item = $this->filters[i]->json();
+                if ($this->filters[$i] instanceof DLFilter) {
+                    $item = $this->filters[$i]->json();
                 } else {
-                    $item = $this->filters[i];
+                    $item = $this->filters[$i];
                 }
 
                 array_push($jsonList, $item);
