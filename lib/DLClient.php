@@ -21,6 +21,14 @@ class DLClient {
         }
     }
 
+    public function setApiKey($key) {
+        $this->authKey = $key;
+    }
+
+    public function setApiSecret($secret) {
+        $this->authSecret = $secret;
+    }
+
     public function getList() {
         $url = $this->url . '/list';
         return $this->getRequest($url);
@@ -49,6 +57,10 @@ class DLClient {
         }
         if ($params !== NULL && $params->filter !== NULL) {
             $url = $this->addUrlSeparator($url);
+            $filter = $params->filter;
+            if ($params->filter instanceof DLFilter) {
+                $filter = $filter->toString();
+            }
             $url .= 'filter=' . urlencode($params->filter);
         }
         if ($params !== NULL && $params->limit !== NULL) {

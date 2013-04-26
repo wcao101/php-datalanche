@@ -17,6 +17,16 @@ class DLFilter {
     }
 
     public function __toString() {
+        $str = '';
+        try {
+            $str = $this->toString();
+        } catch (Exception $e) {
+            // do nothing, __toString cannot throw exception
+        }
+        return $str;
+    }
+
+    public function toString() {
         return json_encode($this->json());
     }
 
