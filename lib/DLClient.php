@@ -149,7 +149,7 @@ class DLClient {
         }
 
         if ($httpStatus < 200 || $httpStatus > 300) {
-            throw new Exception($data);
+            throw new DLException($httpStatus, $data, $url);
         }
 
         return $json;
