@@ -34,7 +34,7 @@ class DLFilter {
 
         if ($this->operator === '$and' || $this->operator === '$or') {
 
-            if ($this->filters == NULL) {
+            if ($this->filters === NULL) {
                 throw new Exception('filter array = NULL in DLFilter');
             }
             if ($this->field !== NULL) {

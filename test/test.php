@@ -107,17 +107,15 @@ function convertFilter($filter) {
         return $filter;
     }
 
-    //print_r($filter);
-
     $keys = array_keys($filter);
-    $operator = $filter[$keys[0]];
+    $operator = $keys[0];
 
     if ($operator === '$and' || $operator === '$or') {
         $filterList = $filter[$operator];
 
         $newFilterList = array();
-        for ($i = 0; i < count($filterList); $i++) {
-            push_array($newFilterList, convertFilter($filterList[$i]));
+        for ($i = 0; $i < count($filterList); $i++) {
+            array_push($newFilterList, convertFilter($filterList[$i]));
         }
 
         $newFilter = new DLFilter();
@@ -325,7 +323,7 @@ while ($files->valid()) {
 
     if (endsWith($filename, '.json') === true) {
 
-        echo $filename . "\n";
+        //echo $filename . "\n";
 
         $jsondata = json_decode(file_get_contents($dirname . '/' . $filename), true);
         $numTests = count($jsondata['tests']);

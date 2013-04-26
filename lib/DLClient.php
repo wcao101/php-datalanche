@@ -47,9 +47,13 @@ class DLClient {
 
         $url = $this->url . '/read';
 
+        // PHP is stupid when it converts boolean to string.
+        // That is why each parameter is wrapped with bool2str().
+        // array2str() handles boolean values itself.
+
         if ($params !== NULL && $params->dataset !== NULL) {
             $url = $this->addUrlSeparator($url);
-            $url .= 'dataset=' . urlencode($params->dataset);
+            $url .= 'dataset=' . urlencode($this->bool2str($params->dataset));
         }
         if ($params !== NULL && $params->fields !== NULL) {
             $url = $this->addUrlSeparator($url);
@@ -61,15 +65,15 @@ class DLClient {
             if ($params->filter instanceof DLFilter) {
                 $filter = $filter->toString();
             }
-            $url .= 'filter=' . urlencode($params->filter);
+            $url .= 'filter=' . urlencode($this->bool2str($params->filter));
         }
         if ($params !== NULL && $params->limit !== NULL) {
             $url = $this->addUrlSeparator($url);
-            $url .= 'limit=' . urlencode($params->limit);
+            $url .= 'limit=' . urlencode($this->bool2str($params->limit));
         }
         if ($params !== NULL && $params->skip !== NULL) {
             $url = $this->addUrlSeparator($url);
-            $url .= 'skip=' . urlencode($params->skip);
+            $url .= 'skip=' . urlencode($this->bool2str($params->skip));
         }
         if ($params !== NULL && $params->sort !== NULL) {
             $url = $this->addUrlSeparator($url);
@@ -98,7 +102,17 @@ class DLClient {
     private function array2str($value) {
         $type = gettype($value);
         if ($type === 'array') {
-            $value = implode(',', $value);
+            $str = '';
+            for ($i = 0; $i < count($value); $i++) {
+                $item = $this->bool2str($value[$i]);
+                $str = $str . $item;
+                if ($i < count($value) - 1) {
+                    $str = $str . ',';
+                }
+            }
+            $value = $str;
+        } else {
+            $value = $this->bool2str($value);
         }
         return $value;
     }
@@ -106,7 +120,9 @@ class DLClient {
     // fix toString(boolean) when false
     private function bool2str($value) {
         if ($value === false) {
-            return 0;
+            return 'false';
+        } else if ($value === true){
+            return 'true';
         }
         return $value;
     }
