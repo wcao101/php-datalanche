@@ -19,7 +19,7 @@ try {
     $params->sortDesc('dosage_form');
     $params->sortAsc('product_type');
 
-    // You can also set params->sort to an array instead of using the helper methods.
+    // You can also set $params->sort to an array instead of using the helper methods.
     $params->sort = array('dosage_form:$desc', 'product_type:$asc');
 
     $data = $client->read($params);

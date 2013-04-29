@@ -1,0 +1,21 @@
+{
+    "name": "datalanche",
+    "type": "library",
+    "version": "0.0.1",
+    "description": "Official PHP client for Datalanche's REST API.",
+    "keywords": ["datalanche", "data", "api"],
+    "homepage": "https://github.com/datalanche/php-datalanche",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Datalanche, Inc.",
+            "homepage": "https://www.datalanche.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0"
+    },
+    "autoload": {
+        "files": ["Datalanche.php"]
+    }
+}
