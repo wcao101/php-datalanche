@@ -1,5 +1,5 @@
 {
-    "name": "datalanche",
+    "name": "datalanche/client",
     "type": "library",
     "version": "0.0.1",
     "description": "Official PHP client for Datalanche's REST API.",
