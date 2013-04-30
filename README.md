@@ -1,7 +1,7 @@
 php-datalanche
 ==============
 
-Official PHP client for Datalanche's REST API.
+Official PHP client for [Datalanche's](https://www.datalanche.com) REST API.
 
 ## Install
 
