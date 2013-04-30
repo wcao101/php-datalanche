@@ -9,9 +9,9 @@ Official PHP client for Datalanche's REST API.
 
 ### Composer
 
-1. Add [datalance/client](https://packagist.org/packages/datalanche/client) to your ```composer.json```. Create the file in your project directory if it does not exist.
-
-```json
+Add [datalance/client](https://packagist.org/packages/datalanche/client) to your project's ```composer.json```. If
+it does not exist, create it in your project's root directory.
+```
 {
     "require": {
         "datalanche/client": "dev-master"
@@ -19,21 +19,20 @@ Official PHP client for Datalanche's REST API.
 }
 ```
 
-2. Install [Composer](http://getcomposer.org/).
-
-    curl -sS https://getcomposer.org/installer | php
-
-3. Download and install dependencies.
-
-    php composer.phar install
-
-4. In your PHP code:
-
-```php
+Install [Composer](http://getcomposer.org/) and dependencies.
+```
+curl -sS https://getcomposer.org/installer | php
+php composer.phar install
+```
+In PHP code:
+```
 require('vendor/autoload.php');
 ```
 
 ### Manual
+
+1. Clone the Git repo: ```git clone https://github.com/datalanche/php-datalanche.git```
+2. In PHP code: ```require('/path/to/repo/Datalanche.php');```
 
 ## Documentation
 
