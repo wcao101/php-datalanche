@@ -285,29 +285,30 @@ function read($client, $test) {
     return $success;
 }
 
-if (count($argv) < 3 || count($argv) > 6) {
-    echo "ERROR: invalid format: php test.php <apikey> <testdir> [ <host> <port> <verifyssl> ]\n";
+if (count($argv) < 4 || count($argv) > 7) {
+    echo "ERROR: invalid format: php test.php <apikey> <apisecret> <testdir> [ <host> <port> <verifyssl> ]\n";
     exit(1);
 }
 
 $numPassed = 0;
 $totalTests = 0;
 $validKey = $argv[1];
-$dirname = $argv[2];
+$validSecret = $argv[2];
+$dirname = $argv[3];
 
 $host = NULL;
-if (count($argv) >= 4) {
-    $host = $argv[3];
+if (count($argv) >= 5) {
+    $host = $argv[4];
 }
 
 $port = NULL;
-if (count($argv) >= 5) {
-    $port = $argv[4];
+if (count($argv) >= 6) {
+    $port = $argv[5];
 }
 
 $verifySsl = true;
-if (count($argv) >= 6) {
-    $verifySsl = strtolower($argv[5]);
+if (count($argv) >= 7) {
+    $verifySsl = strtolower($argv[6]);
     if ($verifySsl === '0' || $verifySsl === 'false') {
         $verifySsl = false;
     } else {
@@ -341,6 +342,9 @@ while ($files->valid()) {
 
             if ($test['parameters']['key'] === 'valid_key') {
                 $test['parameters']['key'] = $validKey;
+            }
+            if ($test['parameters']['secret'] === 'valid_secret') {
+                $test['parameters']['secret'] = $validSecret;
             }
 
             $success = false;
