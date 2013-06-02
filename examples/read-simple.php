@@ -8,11 +8,7 @@ $apiSecret = 'your_api_secret';
 try {
     $client = new DLClient($apiKey, $apiSecret);
 
-    // Uses default parameters however "dataset" is required.
-    $params = new DLReadParams();
-    $params->dataset = 'medical_codes_ndc';
-
-    $data = $client->read($params);
+    $data = $client->read('medical_codes_ndc');
 
     echo json_encode($data) . "\n";
 } catch (Exception $e) {

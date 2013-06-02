@@ -12,11 +12,10 @@ try {
     $readFilter->field('dosage_form')->notEquals('capsule');
 
     $params = new DLReadParams();
-    $params->dataset = 'medical_codes_ndc';
     $params->filter = $readFilter;
     $params->limit = 5;
 
-    $data = $client->read($params);
+    $data = $client->readRecords('medical_codes_ndc', $params);
 
     echo json_encode($data) . "\n";
 } catch (Exception $e) {

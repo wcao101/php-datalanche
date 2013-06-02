@@ -9,8 +9,7 @@ try {
     $client = new DLClient($apiKey, $apiSecret);
 
     $params = new DLReadParams();
-    $params->dataset = 'medical_codes_ndc';
-    $params->fields = array('dosage_form', 'route', 'product_type');
+    $params->columns = array('dosage_form', 'route', 'product_type');
     $params->limit = 5;
     $params->skip = 0;
     $params->total = false;
@@ -22,7 +21,7 @@ try {
     // You can also set $params->sort to an array instead of using the helper methods.
     $params->sort = array('dosage_form:$desc', 'product_type:$asc');
 
-    $data = $client->read($params);
+    $data = $client->readRecords('medical_codes_ndc', $params);
 
     echo json_encode($data) . "\n";
 } catch (Exception $e) {

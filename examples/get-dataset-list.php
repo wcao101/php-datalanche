@@ -8,7 +8,7 @@ $apiSecret = 'your_api_secret';
 try {
     $client = new DLClient($apiKey, $apiSecret);
 
-    $data = $client->getList();
+    $data = $client->getDatasetList();
 
     echo json_encode($data) . "\n";
 } catch (Exception $e) {
