@@ -24,8 +24,8 @@ function convertSimpleFilter($filter) {
     $hasNot = false;
 
     $keys = array_keys($filter);
-    $field = $keys[0];
-    $opExpr = $filter[$field];
+    $column = $keys[0];
+    $opExpr = $filter[$column];
 
     $keys = array_keys($opExpr);
     $operator = $keys[0];
@@ -44,57 +44,57 @@ function convertSimpleFilter($filter) {
 
     if ($operator === '$ends') {
         if ($hasNot === false) {
-            $newFilter->field($field)->endsWith($value);
+            $newFilter->column($column)->endsWith($value);
         } else {
-            $newFilter->field($field)->notEndsWith($value);
+            $newFilter->column($column)->notEndsWith($value);
         }
     } else if ($operator === '$contains') {
         if ($hasNot === false) {
-            $newFilter->field($field)->contains($value);
+            $newFilter->column($column)->contains($value);
         } else {
-            $newFilter->field($field)->notContains($value);
+            $newFilter->column($column)->notContains($value);
         }
     } else if ($operator === '$eq') {
         if ($hasNot === false) {
-            $newFilter->field($field)->equals($value);
+            $newFilter->column($column)->equals($value);
         } else {
-            $newFilter->field($field)->notEquals($value);
+            $newFilter->column($column)->notEquals($value);
         }
     } else if ($operator === '$gt') {
         if ($hasNot === false) {
-            $newFilter->field($field)->greaterThan($value);
+            $newFilter->column($column)->greaterThan($value);
         } else {
-            $newFilter->field($field)->lessThanEqual($value);
+            $newFilter->column($column)->lessThanEqual($value);
         }
     } else if ($operator === '$gte') {
         if ($hasNot === false) {
-            $newFilter->field($field)->greaterThanEqual($value);
+            $newFilter->column($column)->greaterThanEqual($value);
         } else {
-            $newFilter->field($field)->lessThan($value);
+            $newFilter->column($column)->lessThan($value);
         }
     } else if ($operator === '$in') {
         if ($hasNot === false) {
-            $newFilter->field($field)->anyIn($value);
+            $newFilter->column($column)->anyIn($value);
         } else {
-            $newFilter->field($field)->notAnyIn($value);
+            $newFilter->column($column)->notAnyIn($value);
         }
     } else if ($operator === '$lt') {
         if ($hasNot === false) {
-            $newFilter->field($field)->lessThan($value);
+            $newFilter->column($column)->lessThan($value);
         } else {
-            $newFilter->field($field)->greaterThanEqual($value);
+            $newFilter->column($column)->greaterThanEqual($value);
         }
     } else if ($operator === '$lte') {
         if ($hasNot === false) {
-            $newFilter->field($field)->lessThanEqual($value);
+            $newFilter->column($column)->lessThanEqual($value);
         } else {
-            $newFilter->field($field)->greaterThan($value);
+            $newFilter->column($column)->greaterThan($value);
         }
     } else if ($operator === '$starts') {
         if ($hasNot === false) {
-            $newFilter->field($field)->startsWith($value);
+            $newFilter->column($column)->startsWith($value);
         } else {
-            $newFilter->field($field)->notStartsWith($value);
+            $newFilter->column($column)->notStartsWith($value);
         }
     }
 
@@ -164,6 +164,42 @@ function convertSort($value) {
     return $newstr;
 }
 
+function getRecordsFromFile($filename) {
+    $records = array();
+    $i = 0;
+    $fp = fopen($filename, 'r') or die("can't open file");
+
+    while ($row = fgetcsv($fp, 10000)) {
+        if ($i !== 0) {
+            array_push($records, array(
+                'record_id' => $row[0],
+                'name' => $row[1],
+                'email' => $row[2],
+                'address' => $row[3],
+                'city' => $row[4],
+                'state' => $row[5],
+                'zip_code' => $row[6],
+                'phone_number' => $row[7],
+                'date_field' => $row[8],
+                'time_field' => $row[9],
+                'timestamp_field' => $row[10],
+                'boolean_field' => $row[11],
+                'int16_field' => $row[12],
+                'int32_field' => $row[13],
+                'int64_field' => $row[14],
+                'float_field' => $row[15],
+                'double_field' => $row[16],
+                'decimal_field' => $row[17]
+            ));
+        }
+        $i++;
+    }
+
+    fclose($fp) or die("can't close file");
+
+    return $records;
+}
+
 function handleTest($data, $test) {
     $result = 'FAIL';
 
@@ -216,12 +252,108 @@ function handleException($e, $test) {
     return false;
 }
 
-function getList($client, $test) {
+function addColumns($client, $test) {
     $success = false;
     try {
         $client->setApiKey($test['parameters']['key']);
         $client->setApiSecret($test['parameters']['secret']);
-        $data = $client->getList();
+        $client->addColumns($test['parameters']['dataset'], $test['body']['columns']);
+        $success = handleTest(NULL, $test);
+    } catch (DLException $e) {
+        $success = handleException($e, $test);
+    } catch (Exception $e) {
+        echo $e . "\n";
+    }
+    return $success;
+}
+
+function createDataset($client, $test) {
+    $success = false;
+    try {
+        $client->setApiKey($test['parameters']['key']);
+        $client->setApiSecret($test['parameters']['secret']);
+        $client->createDataset($test['body']);
+        $success = handleTest(NULL, $test);
+    } catch (DLException $e) {
+        $success = handleException($e, $test);
+    } catch (Exception $e) {
+        echo $e . "\n";
+    }
+    return $success;
+}
+
+function deleteDataset($client, $test) {
+    $success = false;
+    try {
+        $client->setApiKey($test['parameters']['key']);
+        $client->setApiSecret($test['parameters']['secret']);
+        $client->deleteDataset($test['parameters']['dataset']);
+        $success = handleTest(NULL, $test);
+    } catch (DLException $e) {
+        $success = handleException($e, $test);
+    } catch (Exception $e) {
+        echo $e . "\n";
+    }
+    return $success;
+}
+
+function deleteRecords($client, $test) {
+    $success = false;
+    try {
+        $client->setApiKey($test['parameters']['key']);
+        $client->setApiSecret($test['parameters']['secret']);
+        $client->deleteRecords($test['parameters']['dataset'], convertFilter($test['parameters']['filter']));
+        $success = handleTest(NULL, $test);
+    } catch (DLException $e) {
+        $success = handleException($e, $test);
+    } catch (Exception $e) {
+        echo $e . "\n";
+    }
+    return $success;
+}
+
+function getDatasetList($client, $test) {
+    $success = false;
+    try {
+        $client->setApiKey($test['parameters']['key']);
+        $client->setApiSecret($test['parameters']['secret']);
+        $data = $client->getDatasetList();
+
+        // getDatasetList() test is a bit different than the rest
+        // because a server can have any number of datasets. We test
+        // that the expected dataset(s) is listed rather than
+        // checking the entire result is valid, but only if a valid
+        // response is expected.
+
+        $datasets = array();
+        
+        for ($i = 0; $i < $data['num_datasets']; $i++) {
+            $dataset = $data['datasets'][$i];
+
+            // too variable to test
+            try {
+                unset($dataset['when_created']);
+            } catch (Exception $e) {
+                // ignore error
+            }
+            try {
+                unset($dataset['last_updated']);
+            } catch (Exception $e) {
+                // ignore error
+            }
+
+            for ($j = 0; $j < $test['expected']['data']['num_datasets']; $j++) {
+                if ($dataset === $test['expected']['data']['datasets'][$j]) {
+                    array_push($datasets, $dataset);
+                    break;
+                }
+            }
+        }
+
+        $data = array();
+        $data['num_datasets'] = count($datasets);
+        $data['datasets'] = $datasets;
+
         $success = handleTest($data, $test);
     } catch (DLException $e) {
         $success = handleException($e, $test);
@@ -237,6 +369,13 @@ function getSchema($client, $test) {
         $client->setApiKey($test['parameters']['key']);
         $client->setApiSecret($test['parameters']['secret']);
         $data = $client->getSchema($test['parameters']['dataset']);
+
+        // Delete date/time properties since they are probably
+        // different than the test data. This is okay because
+        // the server sets these values on write operations.
+        unset($data['when_created']);
+        unset($data['last_updated']);
+
         $success = handleTest($data, $test);
     } catch (DLException $e) {
         $success = handleException($e, $test);
@@ -246,18 +385,35 @@ function getSchema($client, $test) {
     return $success;
 }
 
-function read($client, $test) {
+function insertRecords($client, $test, $filename) {
+    $success = false;
+    try {
+        $client->setApiKey($test['parameters']['key']);
+        $client->setApiSecret($test['parameters']['secret']);
+        if ($test['body'] === 'dataset_file') {
+            $records = getRecordsFromFile($filename);
+            $client->insertRecords($test['parameters']['dataset'], $records);
+        } else {
+            $client->insertRecords($test['parameters']['dataset'], $test['body']['records']);
+        }
+        $success = handleTest(NULL, $test);
+    } catch (DLException $e) {
+        $success = handleException($e, $test);
+    } catch (Exception $e) {
+        echo $e . "\n";
+    }
+    return $success;
+}
+
+function readRecords($client, $test) {
     $success = false;
     try {
         $client->setApiKey($test['parameters']['key']);
         $client->setApiSecret($test['parameters']['secret']);
 
         $params = new DLReadParams();
-        if (array_key_exists('dataset', $test['parameters']) === true) {
-            $params->dataset = $test['parameters']['dataset'];
-        }
-        if (array_key_exists('fields', $test['parameters']) === true) {
-            $params->fields = $test['parameters']['fields'];
+        if (array_key_exists('columns', $test['parameters']) === true) {
+            $params->columns = $test['parameters']['columns'];
         }
         if (array_key_exists('filter', $test['parameters']) === true) {
             $params->filter = convertFilter($test['parameters']['filter']);
@@ -275,7 +431,7 @@ function read($client, $test) {
             $params->total = $test['parameters']['total'];
         }
 
-        $data = $client->read($params);
+        $data = $client->readRecords($test['parameters']['dataset'], $params);
         $success = handleTest($data, $test);
     } catch (DLException $e) {
         $success = handleException($e, $test);
@@ -285,8 +441,68 @@ function read($client, $test) {
     return $success;
 }
 
+function removeColumns($client, $test) {
+    $success = false;
+    try {
+        $client->setApiKey($test['parameters']['key']);
+        $client->setApiSecret($test['parameters']['secret']);
+        $client->removeColumns($test['parameters']['dataset'], $test['parameters']['columns']);
+        $success = handleTest(NULL, $test);
+    } catch (DLException $e) {
+        $success = handleException($e, $test);
+    } catch (Exception $e) {
+        echo $e . "\n";
+    }
+    return $success;
+}
+
+function setDetails($client, $test) {
+    $success = false;
+    try {
+        $client->setApiKey($test['parameters']['key']);
+        $client->setApiSecret($test['parameters']['secret']);
+        $client->setDetails($test['parameters']['dataset'], $test['body']);
+        $success = handleTest(NULL, $test);
+    } catch (DLException $e) {
+        $success = handleException($e, $test);
+    } catch (Exception $e) {
+        echo $e . "\n";
+    }
+    return $success;
+}
+
+function updateColumns($client, $test) {
+    $success = false;
+    try {
+        $client->setApiKey($test['parameters']['key']);
+        $client->setApiSecret($test['parameters']['secret']);
+        $client->updateColumns($test['parameters']['dataset'], $test['body']);
+        $success = handleTest(NULL, $test);
+    } catch (DLException $e) {
+        $success = handleException($e, $test);
+    } catch (Exception $e) {
+        echo $e . "\n";
+    }
+    return $success;
+}
+
+function updateRecords($client, $test) {
+    $success = false;
+    try {
+        $client->setApiKey($test['parameters']['key']);
+        $client->setApiSecret($test['parameters']['secret']);
+        $client->updateRecords($test['parameters']['dataset'], $test['body'], convertFilter($test['parameters']['filter']));
+        $success = handleTest(NULL, $test);
+    } catch (DLException $e) {
+        $success = handleException($e, $test);
+    } catch (Exception $e) {
+        echo $e . "\n";
+    }
+    return $success;
+}
+
 if (count($argv) < 4 || count($argv) > 7) {
-    echo "ERROR: invalid format: php test.php <apikey> <apisecret> <testdir> [ <host> <port> <verifyssl> ]\n";
+    echo "ERROR: invalid format: php test.php <apikey> <apisecret> <testfile> [ <host> <port> <verifyssl> ]\n";
     exit(1);
 }
 
@@ -294,7 +510,7 @@ $numPassed = 0;
 $totalTests = 0;
 $validKey = $argv[1];
 $validSecret = $argv[2];
-$dirname = $argv[3];
+$testFile = $argv[3];
 
 $host = NULL;
 if (count($argv) >= 5) {
@@ -316,17 +532,35 @@ if (count($argv) >= 7) {
     }
 }
 
-$client = new DLClient('', '', $host, $port, $verifySsl);
+$client = new DLClient($validKey, $validSecret, $host, $port, $verifySsl);
 
-$files = new DirectoryIterator($dirname);
-while ($files->valid()) {
-    $filename = $files->current()->getFilename();
+try {
+    $client->deleteDataset('test_dataset');
+} catch (Exception $e) {
+    echo $e . "\n";
+    // ignore error
+}
+
+try {
+    $client->deleteDataset('new_test_dataset');
+} catch (Exception $e) {
+    echo $e . "\n";
+    // ignore error
+}
+
+$testSuites = json_decode(file_get_contents($testFile), true);
+$rootDir = dirname($testFile);
+$datasetFile = $rootDir . '/' . $testSuites['dataset_file'];
+$files = $testSuites['suites']['all'];
+
+for ($j = 0; $j < count($files); $j++) {
+    $filename = $files[$j];
 
     if (endsWith($filename, '.json') === true) {
 
         //echo $filename . "\n";
 
-        $jsondata = json_decode(file_get_contents($dirname . '/' . $filename), true);
+        $jsondata = json_decode(file_get_contents($rootDir . '/' . $filename), true);
         $numTests = count($jsondata['tests']);
         $totalTests = $totalTests + $numTests;
 
@@ -349,12 +583,30 @@ while ($files->valid()) {
 
             $success = false;
 
-            if ($test['method'] === 'list') {
-                $success = getList($client, $test);
-            } else if ($test['method'] === 'schema') {
+            if ($test['method'] === 'add_columns') {
+                $success = addColumns($client, $test);
+            } else if ($test['method'] === 'create_dataset') {
+                $success = createDataset($client, $test);
+            } else if ($test['method'] === 'delete_dataset') {
+                $success = deleteDataset($client, $test);
+            } else if ($test['method'] === 'delete_records') {
+                $success = deleteRecords($client, $test);
+            } else if ($test['method'] === 'insert_records') {
+                $success = insertRecords($client, $test, $datasetFile);
+            } else if ($test['method'] === 'get_dataset_list') {
+                $success = getDatasetList($client, $test);
+            } else if ($test['method'] === 'get_schema') {
                 $success = getSchema($client, $test);
-            } else if ($test['method'] === 'read') {
-                $success = read($client, $test);
+            } else if ($test['method'] === 'read_records') {
+                $success = readRecords($client, $test);
+            } else if ($test['method'] === 'remove_columns') {
+                $success = removeColumns($client, $test);
+            } else if ($test['method'] === 'set_details') {
+                $success = setDetails($client, $test);
+            } else if ($test['method'] === 'update_columns') {
+                $success = updateColumns($client, $test);
+            } else if ($test['method'] === 'update_records') {
+                $success = updateRecords($client, $test);
             } else {
                 echo 'ERROR: ' . $test['method'] . " method not found\n";
             }
@@ -364,8 +616,6 @@ while ($files->valid()) {
             }
         }
     }
-
-    $files->next();
 }
 
 echo "-------------------------------\n";

@@ -2,8 +2,7 @@
 
 class DLReadParams {
 
-    public $dataset;
-    public $fields;
+    public $columns;
     public $filter;
     public $limit;
     public $skip;
@@ -11,16 +10,14 @@ class DLReadParams {
     public $total;
 
     public function __construct(
-        $dataset = NULL,
-        $fields = NULL,
+        $columns = NULL,
         $filter = NULL,
         $limit = NULL,
         $skip = NULL,
         $sort = NULL,
         $total = NULL
     ) {
-        $this->dataset = $dataset;
-        $this->fields = $fields;
+        $this->columns = $columns;
         $this->filter = $filter;
         $this->limit = $limit;
         $this->skip = $skip;
@@ -28,25 +25,25 @@ class DLReadParams {
         $this->total = $total;
     }
 
-    public function sortAsc($field) {
+    public function sortAsc($column) {
         if ($this->sort == NULL) {
             $this->sort = array();
         }
         if (gettype($this->sort) !== 'array') {
             throw new Exception('DLReadParams.sort must be an array, but it is not');
         }
-        array_push($this->sort, $field . ':$asc');
+        array_push($this->sort, $column . ':$asc');
         return $this; // method chaining
     }
 
-    public function sortDesc($field) {
+    public function sortDesc($column) {
         if ($this->sort == NULL) {
             $this->sort = array();
         }
         if (gettype($this->sort) !== 'array') {
             throw new Exception('DLReadParams.sort must be an array, but it is not');
         }
-        array_push($this->sort, $field . ':$desc');
+        array_push($this->sort, $column . ':$desc');
         return $this; // method chaining
     }
 }

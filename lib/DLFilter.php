@@ -3,14 +3,14 @@
 class DLFilter {
 
     private $hasNot;
-    private $field;
+    private $column;
     private $filters;
     private $operator;
     private $value;
 
     public function __construct() {
         $this->hasNot = false;
-        $this->field = NULL;
+        $this->column = NULL;
         $this->filters = NULL;
         $this->operator = NULL;
         $this->value = NULL;
@@ -37,8 +37,8 @@ class DLFilter {
             if ($this->filters === NULL) {
                 throw new Exception('filter array = NULL in DLFilter');
             }
-            if ($this->field !== NULL) {
-                throw new Exception('field cannot be set when $and, $or used in DLFilter');
+            if ($this->column !== NULL) {
+                throw new Exception('column cannot be set when $and, $or used in DLFilter');
             }
 
             $jsonList = array();
@@ -60,8 +60,8 @@ class DLFilter {
 
         } else {
 
-            if ($this->field === NULL) {
-                throw new Exception('field = NULL in DLFilter');
+            if ($this->column === NULL) {
+                throw new Exception('column = NULL in DLFilter');
             }
             if ($this->operator === NULL) {
                 throw new Exception('operator = NULL in DLFilter');
@@ -80,14 +80,14 @@ class DLFilter {
             }
 
             $json = array();
-            $json[(string)$this->field] = $opExpr;
+            $json[(string)$this->column] = $opExpr;
 
             return $json;
         }
     }
 
-    public function field($string) {
-        $this->field = $string;
+    public function column($string) {
+        $this->column = $string;
         return $this; // method chaining
     }
 
