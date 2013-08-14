@@ -1,7 +1,11 @@
 <?php
 /* DEPENDICES */
-global runtime_errors = array();
-global runtime_warnings = array();
+global $runtime_errors;
+global $runtime_warnings;
+$runtime_warnings = array();
+$runtime_errors = array();
+
+
 class runtime_error
 {
     private $line;
@@ -68,7 +72,7 @@ class runtime_info
             {
                 foreach ($_content as $_value) 
                 {
-                    $this->content->append($_value)
+                    $this->content->append($_value);
                 }
             }
             $this->content = $_content;
@@ -77,7 +81,7 @@ class runtime_info
         {
             if (is_bool(data_dump))
             {
-                this->data_dump = $_data_dump;
+                $this->data_dump = $_data_dump;
             }
         }
     }
@@ -105,12 +109,15 @@ class runtime_printer
                 if ($value->data_dump)
                 {
                     echo "!!->:(".$i.")"."WARNING DUMPING DATA..\n";
-                    var_dump($value)
+                    var_dump($value);
                     echo "\n-------------------------------\n";
                     echo "END DUMP FROM: (".$i.") CONTINUING..\n";
                 }
             }
-        }
+        }catch (Exception $e)
+            {
+                echo $e.'\n';
+            }
     }
 }
 ?>
