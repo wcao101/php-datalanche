@@ -8,7 +8,7 @@
 * target: datalanche
 */
 /* DEPENDICES */
-require('client_debug.php')
+include 'client_debug.php';
 
 class client 
 {
@@ -16,7 +16,7 @@ class client
     private $auth_secret;
     private $url;
     private $verify_ssl;
-    private $name = 'client_constructor'
+    private $name = 'client_constructor';
 
     /*
     *THIS CONSTRUCT CREATES A BASIC OBJECT WITH ATTRIBUTES NECESSARY TO
@@ -40,7 +40,7 @@ class client
         if ($key != NULL)
         {
             $this->auth_key = $key;
-            $runtime_warnings->append(new runtime_error(debug_backtrace(), $name))
+            $runtime_warnings->append(new runtime_error(debug_backtrace(), $name, 'key was not empty', FALSE));
         }
         if ($secret != NULL)
         {
@@ -84,7 +84,7 @@ class client
 try
 {
     $client = new client('test', 'test_it', 'sdkfhsdkjfhjdh');
-    var_dump($client);
+    new runtime_printer($runtime_warnings);
 }
 catch (Exception $e)
 {
