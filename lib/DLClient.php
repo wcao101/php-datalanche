@@ -10,7 +10,7 @@ class DLClient {
     public function __construct($key = '', $secret = '', $host = NULL, $port = NULL, $verifySsl = True) {
         $this->authKey = $key;
         $this->authSecret = $secret;
-        $this->url = 'https://api.datalanche.com';
+        $this->host = 'api.datalanche.com';
         $this->verifySsl = $verifySsl;
 
         if ($host !== NULL) {
@@ -18,6 +18,9 @@ class DLClient {
         }
         if ($port !== NULL) {
             $this->url .= ':' . $port;
+        }
+        if ($verifySsl != NULL){
+            $this->verifySsl = $verifySsl
         }
     }
 
