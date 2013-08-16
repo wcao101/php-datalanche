@@ -120,4 +120,14 @@ class runtime_printer
             }
     }
 }
+class object_printer
+{
+    public function __construct($data_object)
+    {
+        foreach ($data_object as $key => $value) 
+        {
+            echo $key." : ".$value."\n";
+        }
+    }
+}
 ?>
