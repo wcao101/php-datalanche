@@ -1,6 +1,5 @@
 # ignore IDE/hidden/OS cache files
 .*
-*~
 nbproject
 nb-configuration.xml
 Session.vim
@@ -17,3 +16,9 @@ Desktop.ini
 !.htaccess
 !/.gitignore
 !/.travis.yml
+
+# random
+*~
+.DS_Store
+.idea
+*.iml
