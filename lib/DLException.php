@@ -4,10 +4,10 @@ class DLException extends Exception {
 
     private $url;
 
-    public function __construct($statusCode) {
+    public function __construct($statusCode, $response, $url) {
         $this->code = $statusCode;
-        //$this->message = $response;
-        //$this->url = $url;
+        $this->message = $response;
+        $this->url = $url;
     }
 
     public function getUrl() {
