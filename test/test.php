@@ -1,11 +1,13 @@
 <?php
 
 include '../lib/client.php';
+include 'raw_query.php';
 
 class datalancheTestSequence
 {
     public $deployed_client_parameters;
     public $runtime_messages;
+
 
     public function __construct($_secret, $_key, $_host, $_port, $_ssl, $_test_dataset_path, $_test_suite)
     {
@@ -57,6 +59,41 @@ class datalancheTestSequence
         return($this);
     }
     
+    public function httpAssocEncode($array)
+    {
+        $requestOption = '?';
+        foreach($array as $key => $entry)
+        {
+            if($entry === null)
+            {
+                $entry = '';
+            }
+            $requestOption = (string) $requestOption.$key.'='.$entry;
+        }
+        return($requestOption);
+    }
+
+     public function rawCurlCreator()
+    {
+        //same as $client->curlCreator()
+        $options = array (
+            CURLOPT_HEADER => false,
+            CURLOPT_ENCODING => 'gzip',
+            CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
+            CURLOPT_SSLVERSION => 3,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_FORBID_REUSE => false,
+            CURLOPT_USERAGENT => 'Datalanche PHP Client',
+            CURLOPT_VERBOSE => false,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            );
+        $curlHandle = curl_init();
+        curl_setopt_array($curlHandle, $options);
+        return($curlHandle);
+    }
+
     public function startsWith ($haystack, $needle)
     {
         return !strncmp($haystack, $needle, strlen($needle));
@@ -227,82 +264,57 @@ class datalancheTestSequence
 
     public function queryRaw($client, $test, $type, $url, $body)
     {
-        $_results = null;
-        $_pass = false;
-        $curl_request = null;
-        $http_auth_string = $test['parameters']['key'].":".$test['parameters']['secret'];
-        $curl_request = null;
+        $results = null;
+        $pass = false;
+        $authString = $test['parameters']['key'].":".$test['parameters']['secret'];
+        echo "\n--------------------------------------------------\n";
         echo "QUERY RAW INITIALIZED\n";
+        echo "\n--------------------------------------------------\n";
 
 
         if($type === 'del')
         {
-            $query_raw_query = new stdClass();
-            $query_raw_query->base_url = $url;
-            $query_raw_query->parameters = array('name' => $test['parameters']['name']);
-            $request_url = $client->getUrl($query_raw_query);
-            $curl_request = $client->curlCreator();
-            curl_setopt($curl_request, CURLOPT_URL, $request_url);
-            curl_setopt($curl_request, CURLOPT_CUSTOMREQUEST, 'DELETE');
-            curl_setopt($curl_request, CURLOPT_USERPWD, $http_auth_string);
-            $_results = $client->handleResults($curl_request);
-            $_results = $this->handleTestResult($test, $_results, null);
-            if($_results){$_pass=true;}
-            return($_pass);
-        } elseif ($type === 'post')
-        {
-            $query_raw_query = new stdClass();
-            $query_raw_query->base_url = $url;
-            $query_raw_query->parameters = array('name' => $test['parameters']['name']);
-            //echo "$testname\n";
-            //echo $test['parameters']['name'];
-            //echo gettype($test['parameters']['name']);
-            //$request_url = $client->getUrl($query_raw_query).http_build_query(array('name'=>$test['parameters']['name']));
-            $request_url = $client->url.$url;
-            echo "request url created:\n";
-            echo $request_url;
-            $curl_request = $client->curlCreator();
-            curl_setopt($curl_request, CURLOPT_URL, $request_url);
-            curl_setopt($curl_request, CURLOPT_POST, true);
-            curl_setopt($curl_request, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
-            if(array_key_exists('where', $body))
-            {
-                echo "found where clause\n";
-                $body['where'] = json_encode($body['where']);
-            }
-            $body = array_filter($body, array($this, 'isNotNull'));
-            echo "\nbody stuff\n";
+            //delete get request
+            $requestUrl = $client->getClientUrl().$url.$this->httpAssocEncode($body);
+            $curlHandle = $this->rawCurlCreator();
+            curl_setopt($curlHandle, CURLOPT_CUSTOMREQUEST, 'DELETE');
+            curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
+            curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
+            $results = $client->handleResults($curlHandle);
+            $results = $this->handleTestResult($test, $results, $body);
+
+            return($results); 
+
+        } elseif ($type === 'get') {
+            //get request
+            $requestUrl = $client->getClientUrl().$url.$this->httpAssocEncode($body);
+            $curlHandle = $this->rawCurlCreator();
+            curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
+            curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
+            $results = $client->handleResults($curlHandle);
+            $results = $this->handleTestResult($test, $results, $body);
+
+            return($results);
+
+        } elseif ($type === 'post') {
+            $requestUrl = $client->getClientUrl().$url;
+            $curlHandle = $this->rawCurlCreator();
+            curl_setopt($curlHandle, CURLOPT_POST, true);
+            curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
+            curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $body);
+
+            echo "|BODY:____________________\n";
             var_dump($body);
-            echo $body['name']."\n";
-            echo gettype($body['name']);
-            curl_setopt($curl_request, CURLOPT_POSTFIELDS, json_encode($body));
-            curl_setopt($curl_request, CURLOPT_USERPWD, $http_auth_string);
-            $_results = $client->handleResults($curl_request);
-            $_results = $this->handleTestResult($test, $_results, $body);
-            if($_results){$_pass=true;}
-            return($_pass);
-        } elseif ($type === 'get')
-        {
-            $query_raw_query = new stdClass();
-            $query_raw_query->base_url = $url;
-            if(array_key_exists('name', $test['parameters']))
-            {
-                $query_raw_query->parameters = array('name' => $test['parameters']['name']);
-            }
-            $request_url = $client->getUrl($query_raw_query);
-            //unset($test['parameters'])
-            $request_url = $request_url.'?'.http_build_query($body);
-            echo "find me";
-            echo $request_url."\n";
-            echo "final url\n";
-            echo $request_url."\n";
-            $curl_request = $client->curlCreator();
-            curl_setopt($curl_request, CURLOPT_URL, $request_url);
-            curl_setopt($curl_request, CURLOPT_USERPWD, $http_auth_string);
-            $_results = $client->handleResults($curl_request);
-            $_results = $this->handleTestResult($test, $_results, null);
-            if($_results){$_pass=true;}
-            return($_pass);
+            echo gettype($body)."\n";
+            //var_dump(json_encode($body));
+            echo "|BODY:____________________\n";
+
+            curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type application/json'));
+            curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
+            $results = $client->handleResults($curlHandle);
+            $results = $this->handleTestResult($test, $results, $body);
+
+            return($results);
         }
     }
 
@@ -331,7 +343,7 @@ class datalancheTestSequence
             return($_results);
         }else 
         {
-            $query = new Query($params['key'], $params['secret']);
+            $query = new Query();
             unset($params['key']); unset($params['secret']);
             $query->alterTable($params['name']);
             $query->rename($params['rename']);
@@ -406,7 +418,7 @@ class datalancheTestSequence
         } else
         {
 
-            $_query = new Query($params['key'], $params['secret']);
+            $_query = new Query();
             unset($params['key']); unset($params['secret']);
             $_query->createTable($params['name']);
             $_query->description($params['description']);
@@ -441,7 +453,7 @@ class datalancheTestSequence
             return($_results);
         } else
         {
-            $_query = new Query($params['key'], $params['secret']);
+            $_query = new Query();
             unset($params['key']); unset($params['secret']);
             $_query->dropTable($params['name']);
             $_results = $client->query($_query);
@@ -467,7 +479,7 @@ class datalancheTestSequence
             return($_results);
         } else
         {
-            $_query = new Query($params['key'], $params['secret']);
+            $_query = new Query();
             $_query->deleteFrom($params['name']);
             $_query->where(json_encode($params['where']));
             echo "this should be it\n";
@@ -497,9 +509,9 @@ class datalancheTestSequence
         } else
         {       if($test['expected'] === 200)
                 {       
-                    $_query = new Query($params['key'], $params['secret']);
+                    $_query = new Query();
                 }else {
-                    $_query= new Query($params['key'], $params['secret']);
+                    $_query= new Query();
                 }
                 unset($params['key']); unset($params['secret']);
                 $_query->getTableList();
@@ -528,7 +540,7 @@ class datalancheTestSequence
             return($_results);
         } else
         {
-            $_query = new Query($params['key'], $params['secret']);
+            $_query = new Query();
             unset($params['key']); unset($params['secret']);
             $_query->getTableInfo($params['name']);
             $_results = $client->query($_query);
@@ -556,7 +568,7 @@ class datalancheTestSequence
             return($_results);
         }else
         {
-            $_query = new Query($params['key'], $params['secret']);
+            $_query = new Query();
             unset($params['key']); unset($params['secret']);
             $_query->insertInto($params['name']);
 
@@ -606,7 +618,7 @@ class datalancheTestSequence
             return($_results);
         }else
         {
-            $_query = new Query($params['key'], $params['secret']);
+            $_query = new Query();
             unset($params['key']); unset($params['secret']);
             $_query->select($params['select']);
             $_query->distinct($parmas['distinct']);
@@ -643,7 +655,7 @@ class datalancheTestSequence
             return($_results);
         }else
         {
-            $_query = new Query($params['key'], $params['secret']);
+            $_query = new Query();
             $_query->update($params['name']);
             $_query->set($params['set']);
             $_query->where(json_encode($params['where']));
@@ -712,7 +724,7 @@ class datalancheTestSequence
 
     public function cleanSets($client)
     {
-        $_query = new Query(null, null);
+        $_query = new Query();
         try
         {
             $client->query($_query->dropTable('test_dataset'));
@@ -759,6 +771,8 @@ class datalancheTestSequence
         {
             foreach($tests[$i]['tests'] as $key => $test)
             {
+                $client->setClientKey($test['parameters']['key']);
+                $client->setClientSecret($test['parameters']['secret']);
                 $_results = $this->execute($test, $client);
                 if($_results)
                 {
@@ -773,12 +787,13 @@ class datalancheTestSequence
 }
 
 
-    $test_file_path = $argv[2];
-    $key = $argv[4];
-    $secret = $argv[6];
-    $host = $argv[8];
-    $port = $argv[10];
-    $ssl = $argv[12];
-    $test_sequence = new datalancheTestSequence($secret, $key, $host, $port, $ssl, $test_file_path, null);
+    $secret = 'VCBA1hLyS2mYdrL6kO/iKQ==';
+    $key = '7zNN1Pl9SQ6lNZwYe9mtQw==';
+    $host = 'localhost';
+    $port = 4001;
+    $ssl = false;
+    $testfile = "../../api-server/tests/test-suites.json";
+    echo "testfile: ".realpath($testfile)."\n";
+    $test_sequence = new datalancheTestSequence($secret, $key, $host, $port, $ssl, $testfile, null);
     $test_sequence->adventSequence();
 ?>
