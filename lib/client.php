@@ -14,53 +14,54 @@ include 'expression.php';
 
 class Client 
 {
-    public $parameters;
-    public $key;
-    public $secret;
-    public $url;
-    public $verify_ssl;
-    public $connection;
-    public $get_url;
-    public $curl_status_array;
+    private $_parameters;
+    private $_key;
+    private $_secret;
+    private $_url;
+    private $_verifySsl;
+    private $_connection;
+    private $_getUrl;
+    private $_host;
+    private $_curlStatusArray;
 
-    public function __construct ($_secret, $_key, $_host, $_port, $_ssl)
+    public function __construct ($secret, $key, $host, $port, $ssl)
     {
         //assignments
-        $_url = 'https://';
-        $this->curl_status_array = array();
+        $url = 'https://';
+        $this->_curlStatusArray = array();
 
-        if($_host === null || $_host === '')
+        if($host === null || $host === '')
         {
-            $this->host = 'api.datalanche.com';
+            $this->_host = 'api.datalanche.com';
         }else{
-            $this->host = $_host;
+            $this->_host = $host;
         }
 
-        $_url = $_url.$_host;
+        $url = $url.$host;
 
-        if ($_port === null || $_port === '')
+        if ($port === null || $port === '')
         {
-            $this->port = null;
+            $this->_port = null;
         }else{
-            $this->port = $_port;
-            $_url = $_url.':'.$_port;
+            $this->_port = $port;
+            $url = $url.':'.$port;
         }
 
-        $this->url = $_url;
+        $this->_url = $url;
 
-        if ($_ssl === false || $_ssl === 0 || $_ssl === 'false'){
-            $this->verify_ssl = $_ssl;
-        }else if($_ssl === null || $_ssl === true || $_ssl === 1 || $_ssl === 'true'){
-            $this->verify_ssl = true;
+        if ($ssl === false || $ssl === 0 || $ssl === 'false'){
+            $this->verify_ssl = $ssl;
+        }else if($ssl === null || $ssl === true || $ssl === 1 || $ssl === 'true'){
+            $this->_verifySsl = true;
         }
 
-        if($_secret != null)
+        if($secret != null)
         {
-            $this->secret = $_secret; 
+            $this->_secret = $secret; 
         }
-        if ($_key != null)
+        if ($key != null)
         {
-            $this->key = $_key;
+            $this->_key = $key;
         }
 
         return($this);
@@ -81,195 +82,182 @@ class Client
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 10,
             );
-        $curl_request = curl_init();
-        curl_setopt_array($curl_request, $options);
-        return($curl_request);
+        $curlHandle = curl_init();
+        curl_setopt_array($curlHandle, $options);
+        return($curlHandle);
     }
 
     public function getBody($query)
     {
-        $body = array(
-            'add_columns' => null,
-            'alter_columns' => null,
-            'name' => null,
-            'description' => null,
-            'drop_columns' => null,
-            'is_private' => null,
-            'license' => null,
-            'rename' => null,
-            'sources' => null,
-            'columns' => null,
-            'where' => null,
-            'values' => null,
-            'distinct' => null,
-            'from' => null,
-            'group_by' => null,
-            'limit' => null,
-            'offset' => null,
-            'order_by' => null,
-            'select' => null,
-            'total' => null,
-            'set' => null,
-            'debug' => null
-            );
+        $queryParameters = $query->getParameters();
+        $queryBaseUrl = $query->getBaseUrl();
+        $postRequestBody = array();
 
         if($query === null){
-            throw new Exception("The query for getBody() was null\n");
-            return($body);
+            throw new Exception("The query for function getBody() was null\n");
+            return($requestBody);
         }
 
-        if(array_key_exists('debug', $query->parameters))
+        /*
+        if(array_key_exists('debug', $queryParameters))
         {
-            if($query->parameters['debug'] != null){
-                $body['debug'] = $query->parameters['debug'];
+
+            if($queryParameters['debug'] !== null){
+                $postRequestBody['debug'] = $queryParameters['debug'];
+            }else{
+                $postRequestBody['debug'] = false;
             }
+        }else{
+            $postRequestBody['debug'] = false;
+        }
+        */
+
+        if($queryBaseUrl === '/alter_table')
+        {
+            if($queryParameters['add_columns'] !== null)
+            {
+                $postRequestBody['add_columns'] = $queryParameters['add_columns'];
+            }
+            if($queryParameters['alter_columns'] !== null)
+            {
+                $postRequestBody['alter_columns'] = $queryParameters['alter_columns'];
+            }
+            if($queryParameters['name'] !== null)
+            {
+                $postRequestBody['name'] = $queryParameters['name'];
+            }
+            if($queryParameters['description'] !== null)
+            {
+                $postRequestBody['description'] = $queryParameters['description'];
+            }
+            if($queryParameters['drop_columns'] !== null)
+            {
+                $postRequestBody['drop_columns'] = $queryParameters['drop_columns'];
+            }
+            if($queryParameters['is_private'] !== null)
+            {
+                $postRequestBody['is_private'] = $queryParameters['is_private'];
+            }
+            if($queryParameters['license'] !== null)
+            {
+                $postRequestBody['license'] = $queryParameters['license'];
+            }
+            if($queryParameters['rename'] !== null)
+            {
+                $postRequestBody['rename'] = $queryParameters['rename'];
+            }
+            if($queryParameters['sources'] !== null)
+            {
+                $postRequestBody['sources'] = $queryParameters['sources'];
+            }
+
         }
 
-        if($query->base_url === 'alter_table')
+        elseif($queryBaseUrl === '/create_table')
         {
-            if($query->parameters['add_columns'] != null)
+            if($queryParameters['columns'] !== null)
             {
-                $body['add_columns'] = $query->parameters['add_columns'];
+                $postRequestBody['columns'] = $queryParameters['columns'];
             }
-            if($query->parameters['alter_columns'] != null)
+            if($queryParameters['name'] !== null)
             {
-                $body['alter_columns'] = $query->parameters['alter_columns'];
+                $postRequestBody['name'] = $queryParameters['name'];
             }
-            if($query->parameters['name'] != null)
+            if($queryParameters['description'] !== null)
             {
-                $body['name'] = $query->parameters['name'];
+                $postRequestBody['description'] = $queryParameters['description'];
             }
-            if($query->parameters['description'] != null)
+            if($queryParameters['is_private'] !== null)
             {
-                $body['description'] = $query->parameters['description'];
+                $postRequestBody['is_private'] = $queryParameters['is_private'];
             }
-            if($query->parameters['drop_columns'] != null)
+            if($queryParameters['license'] !== null)
             {
-                $body['drop_columns'] = $query->parameters['drop_columns'];
+                $postRequestBody['license'] = $queryParameters['license'];
             }
-            if($query->parameters['is_private'] != null)
+            if($queryParameters['sources'] !== null)
             {
-                $body['is_private'] = $query->parameters['is_private'];
-            }
-            if($query->parameters['license'] != null)
-            {
-                $body['license'] = $query->parameters['license'];
-            }
-            if($query->parameters['rename'] != null)
-            {
-                $body['is_private'] = $query->parameters['is_private'];
-            }
-            if($query->parameters['sources'] != null)
-            {
-                $body['sources'] = $query->parameters['sources'];
-            }
-        }
-
-        elseif($query->base_url === '/create_table')
-        {
-            if($query->parameters['columns'] != null)
-            {
-                $body['columns'] = $query->parameters['columns'];
-            }
-            if($query->parameters['name'] != null)
-            {
-                $body['name'] = $query->parameters['name'];
-            }
-            if($query->parameters['description'] != null)
-            {
-                $body['description'] = $query->parameters['description'];
-            }
-            if($query->parameters['is_private'] != null)
-            {
-                $body['is_private'] = $query->parameters['is_private'];
-            }
-            if($query->parameters['license'] != null)
-            {
-                $body['license'] = $query->parameters['license'];
-            }
-            if($query->parameters['sources'] != null)
-            {
-                $body['sources'] = $query->parameters['sources'];
-            }
-        }
-
-        elseif ($query->base_url === '/delete_from')
-        {
-            if($query->parameters['name'] != null)
-            {
-                $body['name'] = $query->parameters['name'];
-            }
-            if($query->parameters['where'] != null)
-            {
-                $body['where'] = $query->parameters['where'];
+                $postRequestBody['sources'] = $queryParameters['sources'];
             }
         }
 
-        elseif ($query->base_url === '/insert_into')
+        elseif ($queryBaseUrl === '/delete_from')
         {
-            if($query->parameters['name'] != null)
+            if($queryParameters['name'] !== null)
             {
-                $body['name'] = $query->parameters['name'];
+                $postRequestBody['name'] = $queryParameters['name'];
             }
-            if($query->parameters['values'] != null)
+            if($queryParameters['where'] !== null)
             {
-                $body['values'] = $query->parameters['values'];
+                $postRequestBody['where'] = $queryParameters['where'];
             }
         }
 
-        elseif ($query->base_url === '/select_from')
+        elseif ($queryBaseUrl === '/insert_into')
         {
-            if($query->parameters['distinct'] != null)
+            if($queryParameters['name'] !== null)
             {
-                $body['distinct'] = $query->parameters['distinct'];
+                $postRequestBody['name'] = $queryParameters['name'];
             }
-            if($query->parameters['from'] != null)
+            if($queryParameters['values'] !== null)
             {
-                $body['from'] = $query->parameters['from'];
-            }
-            if($query->parameters['group_by'] != null)
-            {
-                $body['group_by'] = $query->parameters['group_by'];
-            }
-            if($query->parameters['limit'] != null)
-            {
-                $body['limit'] = $query->parameters['limit'];
-            }
-            if($query->parameters['offset'] != null)
-            {
-                $body['offset'] = $query->parameters['offset'];
-            }
-            if($query->parameters['order_by'] != null)
-            {
-                $body['order_by'] = $query->parameters['order_by'];
-            }
-            if($query->parameters['select'] != null)
-            {
-                $body['select'] = $query->parameters['select'];
-            }
-            if($query->parameters['total'] != null)
-            {
-                $body['total'] = $query->parameters['total'];
-            }
-            if($query->parameters['where'] != null)
-            {
-                $body['where'] = $query->parameters['where'];
+                $postRequestBody['values'] = $queryParameters['values'];
             }
         }
 
-        elseif($query->base_url === '/update')
+        elseif ($queryBaseUrl === '/select_from')
         {
-            if($query->parameters['name'] != null)
+            if($queryParameters['distinct'] !== null)
             {
-                $body['name'] = $query->parameters['name'];
+                $postRequestBody['distinct'] = $queryParameters['distinct'];
             }
-            if($query->parameters['set'] != null)
+            if($queryParameters['from'] !== null)
             {
-                $body['set'] = $query->parameters['set'];
+                $postRequestBody['from'] = $queryParameters['from'];
             }
-            if($query->parameters['where'] != null)
+            if($queryParameters['group_by'] !== null)
             {
-                $body['where'] = $query->parameters['where'];
+                $postRequestBody['group_by'] = $queryParameters['group_by'];
+            }
+            if($queryParameters['limit'] !== null)
+            {
+                $postRequestBody['limit'] = $queryParameters['limit'];
+            }
+            if($queryParameters['offset'] !== null)
+            {
+                $postRequestBody['offset'] = $queryParameters['offset'];
+            }
+            if($queryParameters['order_by'] !== null)
+            {
+                $postRequestBody['order_by'] = $queryParameters['order_by'];
+            }
+            if($queryParameters['select'] !== null)
+            {
+                $postRequestBody['select'] = $queryParameters['select'];
+            }
+            if($queryParameters['total'] !== null)
+            {
+                $postRequestBody['total'] = $queryParameters['total'];
+            }
+            if($queryParameters['where'] !== null)
+            {
+                $postRequestBody['where'] = $queryParameters['where'];
+            }
+        }
+
+        elseif($queryBaseUrl === '/update')
+        {
+            if($queryParameters['name'] !== null)
+            {
+                $postRequestBody['name'] = $queryParameters['name'];
+            }
+            if($queryParameters['set'] !== null)
+            {
+                $postRequestBody['set'] = $queryParameters['set'];
+            }
+            if($queryParameters['where'] !== null)
+            {
+                $postRequestBody['where'] = $queryParameters['where'];
             }
         }
         else
@@ -279,7 +267,9 @@ class Client
             exit();
         }
 
-        return($body);
+        //$postRequestBody = array_filter($postRequestBody, '!is_null');
+
+        return($postRequestBody);
     }
 
     public function getUrl($query)
@@ -289,52 +279,56 @@ class Client
             return('/');
         }
 
-        $url = $query->base_url;
-        $parameters = array(
+        $queryString = null;
+        $queryParameters = $query->getParameters();
+        $queryBaseUrl = $query->getBaseUrl();
+
+        $getParameters = array(
             'debug' => null,
             'name' => null
             );
 
-        if($url === '/drop_table')
+        if($queryBaseUrl === '/drop_table')
         {
-            if($query->parameters['name'])
+            if($queryParameters['name'])
             {
-                $parameters['name'] = $query->parameters['name'];
-            }elseif(!$query->parameters['name']){
-                $parameters['name'] = null;
+                $getParameters['name'] = $queryParameters['name'];
+            }elseif(!$queryParameters['name']){
+                $getParameters['name'] = null;
             }
         }
 
-        elseif($url === '/get_table_info')
+        elseif($queryBaseUrl === '/get_table_info')
         {
-            if($query->parameters['name'])
+            if($queryParameters['name'])
             {
-                $parameters['name'] = $query->parameters['name'];
-            }elseif(!$query->parameters['name']){
-                $parameters['name'] = null;
+                $getParameters['name'] = $queryParameters['name'];
+            }elseif(!$queryParameters['name']){
+                $getParameters['name'] = null;
             }
         }
 
-        elseif($url === '/get_table_list')
+        elseif($queryBaseUrl === '/get_table_list')
         {
-            $url = $this->url.$url;
-            echo "get table list found: ".$url."\n";
-            return($url);
+            $queryBaseUrl = $this->_url.$queryBaseUrl;
+            echo "get table list found: ".$queryBaseUrl."\n";
+            return($queryBaseUrl);
         }
 
-        $_str = http_build_query($parameters);
+        $queryString = http_build_query($getParameters);
 
-        if($_str !== null)
+        if($queryString !== null)
         {
-            $url = $this->url.$url.'?'.$_str;        
+            $queryBaseUrl = $this->_url.$queryBaseUrl.'?'.$queryString;        
         }
 
-        return($url);
+        return($queryBaseUrl);
     }
 
     public function query($query)
     {
-        $_results = null;
+        $results = null;
+        $queryMethodType = $query->getMethodType();
 
 
         if(!$query)
@@ -343,180 +337,223 @@ class Client
             exit();
         }
 
-        if($query->url_type === 'del')
+        if($queryMethodType === 'del')
         {
-            $_results = $this->clientDelete($query);
-            return($_results);
+            $results = $this->clientDelete($query);
+            return($results);
         }
-        if($query->url_type === 'get')
+        if($queryMethodType === 'get')
         {
-            $_results = $this->clientGet($query);
-            return($_results);
+            $results = $this->clientGet($query);
+            return($results);
         }
-        if($query->url_type === 'post')
+        if($queryMethodType === 'post')
         {
-            $_results = $this->clientPost($query);
-            return($_results);
+            $results = $this->clientPost($query);
+            return($results);
         }
     }
 
     public function clientPost($query)
     {
-        $_key = null;
-        $_secret = null;
-        $_results = null;
-        $_body = null;
-        $http_auth_string = null;
-        $request_url = null;
-        $curl_request = null;
+        $key = $this->_key;
+        $secret = $this->_secret;
+        $results = null;
+        $postRequestBody = null;
+        $httpAuthString = null;
+        $requestUrl = null;
+        $curlHandle = null;
 
-        if($query->test_key != null)
+        /*
+
+        if($query->test_key !== null)
         {
             $_key = $query->test_key;
         }else {
             $_key = $this->key;
         }
 
-        if($query->test_secret != null)
+        if($query->test_secret !== null)
         {
             $_secret = $query->test_secret;
         }else {
             $_secret = $this->secret;
         }
+        */
 
-        $_body = json_encode($this->getBody($query));
-        $http_auth_string = (string) $_key.":".$_secret;
-        $request_url = $this->getUrl($query);
-        //$request_url = $this->url.$request_url."?".
-            //http_build_query(
-                //array('name'=>$query->parameters['name']));
-        echo "POST URL FORMULATED: ".$request_url."\n";
-        $curl_request = $this->curlCreator();
-        curl_setopt($curl_request, CURLOPT_POST, true);
-        curl_setopt($curl_request, CURLOPT_POSTFIELDS, $_body);
-        curl_setopt($curl_request, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
-        curl_setopt($curl_request, CURLOPT_URL, $request_url);
-        $_results = $this->handleResults($curl_request);
+        $postRequestBody = $this->getBody($query);
+        $httpAuthString = (string) $key.":".$secret;
+        echo "\n-----AUTH-----\n";
+        echo "string: ".$httpAuthString."\n";
+        echo "key ".$key."\n";
+        echo "secret ".$secret."\n";
+        echo "\n------------\n";
+        $requestUrl = $this->getUrl($query);
+        echo "POST URL FORMULATED: ".$requestUrl."\n";
+        $curlHandle = $this->curlCreator();
+        curl_setopt($curlHandle, CURLOPT_POST, true);
+        curl_setopt($curlHandle, CURLOPT_USERPWD, $httpAuthString);
+        curl_setopt($curlHandle, CURLOPT_POSTFIELDS, json_encode($postRequestBody));
+        curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
+        curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
+        echo "\n----------------------------------------------\n";
+        echo "query::\n";
+        var_dump(json_encode($postRequestBody));
+        echo "\n----------------------------------------------\n";
+        $results = $this->handleResults($curlHandle);
 
-        return($_results);
+        return($results);
     }
 
     public function clientGet($query)
     {
-        $_key = null;
-        $_secret = null;
-        $_results = null;
-        $http_auth_string = null;
-        $request_url = null;
-        $curl_request = null;
+        $key = $this->_key;
+        $secret = $this->_secret;
+        $results = null;
+        $httpAuthString = null;
+        $requestUrl = null;
+        $curlHandle = null;
 
         ///test for subbed key
-        if($query->test_key != null)
+        /*
+        if($query->test_key !== null)
         {
             $_key = $query->test_key;
         }else {
             $_key = $this->key;
         }
         ///test for subbed secret
-        if($query->test_secret != null)
+        if($query->test_secret !== null)
         {
             $_secret = $query->test_secret;
         }else {
             $_secret = $this->secret;
         }
+        */
 
-        $http_auth_string = (string) $_key.":".$_secret;
-        $request_url = $this->getUrl($query);
-        $curl_request = $this->curlCreator();
-        curl_setopt($curl_request, CURLOPT_USERPWD, $http_auth_string);
-        curl_setopt($curl_request, CURLOPT_URL, $request_url);
-        $_results = $this->handleResults($curl_request);
+        $httpAuthString = (string) $key.":".$secret;
+        $requestUrl = $this->getUrl($query);
+        $curlHandle = $this->curlCreator();
+        curl_setopt($curlHandle, CURLOPT_USERPWD, $httpAuthString);
+        curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
+        $results = $this->handleResults($curlHandle);
 
-        return($_results);
+        return($results);
     }
 
     public function clientDelete($query)
     {
-        $_key = null;
-        $_secret = null;
-        $_results = null;
-        $http_auth_string = null;
-        $request_url = null;
-        $curl_request = null;
+        $key = $this->_key;
+        $secret = $this->_secret;
+        $results = null;
+        $httpAuthString = null;
+        $requestUrl = null;
+        $curlHandle = null;
 
-        if($query->test_key != null)
+        /*
+        if($query->test_key !== null)
         {
              $_key = $query->test_key;
         }else {
              $_key = $this->key;
         }
-        if($query->test_secret != null)
+        if($query->test_secret !== null)
         {
             $_secret = $query->test_secret;
         }else {
             $_secret = $this->secret;
         }
+        */
 
         //now creating the specific authstring
-        $http_auth_string = (string) $_key.":".$_secret;
+        $httpAuthString = (string) $key.":".$secret;
         //setting url and curl_request handle
-        $request_url = $this->getUrl($query);
-        $curl_request = $this->curlCreator();
+        $requestUrl = $this->getUrl($query);
+        $curlHandle = $this->curlCreator();
 
-        curl_setopt($curl_request, CURLOPT_CUSTOMREQUEST, 'DELETE');
-        curl_setopt($curl_request, CURLOPT_USERPWD, $http_auth_string);
-        curl_setopt($curl_request, CURLOPT_URL, $request_url);
-        $_results = $this->handleResults($curl_request);
+        curl_setopt($curlHandle, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        curl_setopt($curlHandle, CURLOPT_USERPWD, $httpAuthString);
+        curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
+        $results = $this->handleResults($curlHandle);
 
-        return($_results);
+        return($results);
     }
 
-    public function handleResults($curl_handle)
+    public function handleResults($curlHandle)
     {
         //handle results gets curl handle, executes it, and
         //then returns pertinant results about the interaction
-        $curl_interaction = null; //variable for curl execution handle
-        $last_curl_error = null; //variable for curl end session error output
-        $curl_debug = null;
-        $curl_info = null;
-        $transaction_errors = null;
-        $curl_debug = curl_getinfo($curl_handle, 1);
+        $curlInteraction = null; //variable for curl execution handle
+        $lastCurlError = null; //variable for curl end session error output
+        $curlDebug = null;
+        $curlInfo = null;
+        $transactionErrors = null;
         try
         {
-            $curl_interaction = curl_exec($curl_handle); // now actually making the only outside call
+            $curlInteraction = curl_exec($curlHandle); // now actually making the only outside call
+            $curlDebug = curl_getinfo($curlHandle, true);
             //echo "///////////////////////////////\n";
             //echo "curl body:\n:";
             //var_dump($curl_interaction);
             //echo "..................\n";
-            $last_curl_error = (string) curl_error($curl_handle);
-            $curl_info = curl_getinfo($curl_handle, CURLINFO_HTTP_CODE);
-            $curl_debug = curl_getinfo($curl_handle, 1);
-            $transaction_errors = array (
-                'statusCode' => $curl_info,
+            $lastCurlError = (string) curl_error($curlHandle);
+            $curlInfo = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
+            $curlDebug = curl_getinfo($curlHandle, 1);
+            curl_close($curlHandle);
+            $transactionErrors = array (
+                'statusCode' => $curlInfo,
                 );
-            if($transaction_errors['statusCode'] === null || $transaction_errors['statusCode'] === '')
+            if($transactionErrors['statusCode'] === null || $transactionErrors['statusCode'] === '')
             {
 
             }
-
+                /*
                 echo "++++++++++++++++++++++++++++++++++++++++++++\n";
                 echo "GOT CODE: ".$transaction_errors['statusCode']."\n";
                 echo "CURL INFO DUMP:\n";
                 var_dump($curl_debug);
                 echo "++++++++++++++++++++++++++++++++++++++++++++\n";
+                */
            // echo "LAST CURL ERROR: ".$curl_info."\n";
         } catch (Exception $e) {
             echo "curl error: ".$e;
         }
 
-        if($last_curl_error){
-            array_push($this->curl_status_array, json_decode($last_curl_error));
+        if($lastCurlError){
+            array_push($this->_curlStatusArray, json_decode($lastCurlError));
         }
 
+        return($transactionErrors);
+    }
 
+    public function setClientKey($key)
+    {
+        $this->_key = $key;
+    }
 
-        
-        return($transaction_errors);
+    public function setClientSecret($secret)
+    {
+        $this->_secret = $secret;
+    }
+
+    public function setClientHost($host)
+    {
+        $this->_host = $host;
+    }
+
+    public function setClientPort($port)
+    {
+        $this->_post = $port;
+    }
+
+    public function setClientSsl($boolSsl)
+    {
+        $this->_verifySsl = $boolSsl;
+    }
+
+    public function isNotNull($mixedVar)
+    {
+        return !is_null($mixedVar);
     }
 }
 
