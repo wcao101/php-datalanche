@@ -73,6 +73,11 @@ class datalancheTestSequence
         return (substr($haystack, -$length) === $needle);   
     }
 
+    public function isNotNull($r)
+    {
+        return !is_null($r);
+    }
+
     public function scrobbleTestAuth($json, $relevant_parameters)
     {
 
@@ -184,7 +189,7 @@ class datalancheTestSequence
             $_result = 'PASS';
             echo $_result.":".$test['name']."\n";
             echo "EXPECTED: ".$test['expected']['statusCode']." RECEIVED: ".$datalanche_error['statusCode']."\n";
-            var_dump($test['parameters']);
+            //var_dump($test['parameters']);
             echo "----------------------------------------\n";
             return(true);
         }else
@@ -192,8 +197,8 @@ class datalancheTestSequence
             echo "----------------------------------------\n";
             echo $_result.":".$test['name']."\n";
             echo "EXPECTED: ".$test['expected']['statusCode']." RECEIVED: ".$datalanche_error['statusCode']."\n";
-            var_dump($test['parameters']);
-            var_dump(debug_backtrace());
+            var_dump($test);
+            //var_dump(debug_backtrace());
             echo "----------------------------------------\n";
             exit();
             return(false);
@@ -206,9 +211,9 @@ class datalancheTestSequence
     public function useRawQuery($keys, $params)
     {
         $use_raw = false;
-        foreach($keys as $key)
+        foreach($params as $param)
         {
-            if(array_key_exists($key, $params) === false)
+            if(array_key_exists($param, $keys) === false)
             {
                 echo "using raw!\n";
                 $use_raw = true;
@@ -246,7 +251,16 @@ class datalancheTestSequence
             return($_pass);
         } elseif ($type === 'post')
         {
+            $query_raw_query = new stdClass();
+            $query_raw_query->base_url = $url;
+            $query_raw_query->parameters = array('name' => $test['parameters']['name']);
+            //echo "$testname\n";
+            //echo $test['parameters']['name'];
+            //echo gettype($test['parameters']['name']);
+            //$request_url = $client->getUrl($query_raw_query).http_build_query(array('name'=>$test['parameters']['name']));
             $request_url = $client->url.$url;
+            echo "request url created:\n";
+            echo $request_url;
             $curl_request = $client->curlCreator();
             curl_setopt($curl_request, CURLOPT_URL, $request_url);
             curl_setopt($curl_request, CURLOPT_POST, true);
@@ -256,6 +270,11 @@ class datalancheTestSequence
                 echo "found where clause\n";
                 $body['where'] = json_encode($body['where']);
             }
+            $body = array_filter($body, array($this, 'isNotNull'));
+            echo "\nbody stuff\n";
+            var_dump($body);
+            echo $body['name']."\n";
+            echo gettype($body['name']);
             curl_setopt($curl_request, CURLOPT_POSTFIELDS, json_encode($body));
             curl_setopt($curl_request, CURLOPT_USERPWD, $http_auth_string);
             $_results = $client->handleResults($curl_request);
@@ -266,10 +285,19 @@ class datalancheTestSequence
         {
             $query_raw_query = new stdClass();
             $query_raw_query->base_url = $url;
-            $query_raw_query->parameters = array('name' => $test['parameters']['name']);
+            if(array_key_exists('name', $test['parameters']))
+            {
+                $query_raw_query->parameters = array('name' => $test['parameters']['name']);
+            }
             $request_url = $client->getUrl($query_raw_query);
+            //unset($test['parameters'])
+            $request_url = $request_url.'?'.http_build_query($body);
+            echo "find me";
+            echo $request_url."\n";
+            echo "final url\n";
+            echo $request_url."\n";
             $curl_request = $client->curlCreator();
-            curl_setopt($curl_request, CURLOPT_URL, $url);
+            curl_setopt($curl_request, CURLOPT_URL, $request_url);
             curl_setopt($curl_request, CURLOPT_USERPWD, $http_auth_string);
             $_results = $client->handleResults($curl_request);
             $_results = $this->handleTestResult($test, $_results, null);
@@ -300,7 +328,6 @@ class datalancheTestSequence
         {
             unset($params['key']); unset($params['secret']);
             $_results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
-            $_results = $this->handleTestResult($test, $_results, $params);
             return($_results);
         }else 
         {
@@ -383,10 +410,12 @@ class datalancheTestSequence
             unset($params['key']); unset($params['secret']);
             $_query->createTable($params['name']);
             $_query->description($params['description']);
-            $_query->isPrivate($params['is_private']);
+            $_query->isPrivate((bool) $params['is_private']);
             $_query->license($params['license']);
             $_query->sources($params['sources']);
             $_query->columns($params['columns']);
+            echo "create table\n";
+            //var_dump($_query);
 
             $_results = $client->query($_query);
             $_results = $this->handleTestResult($test, $_results, $params);
@@ -442,7 +471,7 @@ class datalancheTestSequence
             $_query->deleteFrom($params['name']);
             $_query->where(json_encode($params['where']));
             echo "this should be it\n";
-            var_dump($params['where']);
+            //var_dump($params['where']);
             $_results = $client->query($_query);
             $_results = $this->handleTestResult($test, $_results, $params);
             return($_results);
@@ -462,18 +491,19 @@ class datalancheTestSequence
         if($use_raw === true)
         {
             unset($params['key']); unset($params['secret']);
+            echo "QUERY RAW QUERY RAW\n";
             $_results = $this->queryRaw($client, $test, 'get', '/get_table_list', $params);
             return($_results);
         } else
-        {
-            if($test['expected']['statusCode'] == 200)
-            {
-                $_query = new Query($params['key'], $params['secret']);
+        {       if($test['expected'] === 200)
+                {       
+                    $_query = new Query($params['key'], $params['secret']);
+                }else {
+                    $_query= new Query($params['key'], $params['secret']);
+                }
                 unset($params['key']); unset($params['secret']);
                 $_query->getTableList();
                 $_results = $client->query($_query);
-
-            }
             
             
             $_results = $this->handleTestResult($test, $_results, $params);
@@ -532,7 +562,7 @@ class datalancheTestSequence
 
             if($params['values'] === 'dataset_file')
             {
-                var_dump($test);
+                //var_dump($test);
                 $_path = realpath("../../api-server/tests/".$test['dataset_file']);
                 $_rows = $this->getRecordsFromFile($_path);
                 $_query->values($_rows);
@@ -582,8 +612,8 @@ class datalancheTestSequence
             $_query->distinct($parmas['distinct']);
             $_query->from($params['from']);
             $_query->where(json_encode($params['where']));
-            echo "this should be it\n";
-            var_dump($params['where']);;
+            //echo "this should be it\n";
+            //var_dump($params['where']);;
             $_query->groupBy($params['group_by']);
             $_query->orderBy($params['order_by']);
             $_query->offset($params['offset']);
@@ -618,7 +648,7 @@ class datalancheTestSequence
             $_query->set($params['set']);
             $_query->where(json_encode($params['where']));
             echo "this should be it:\n";
-            var_dump($params['where']);
+            //var_dump($params['where']);
             $_results = $client->query($_query);
             $_results = $this->handleTestResult($test, $_results, $params);
             return($_results);
