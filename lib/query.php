@@ -61,6 +61,7 @@ class Query
         return($this);
     }
 
+   
     public function alterColumn($columnName, $object)
     {
         if(!$this->_parameters['alter_columns'])
