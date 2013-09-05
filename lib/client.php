@@ -24,6 +24,7 @@ class Client
     private $_host;
     private $_curlStatusArray;
 
+
     public function __construct ($secret, $key, $host, $port, $ssl)
     {
         //assignments
@@ -78,7 +79,7 @@ class Client
             CURLOPT_SSL_VERIFYHOST => false,
             CURLOPT_FORBID_REUSE => false,
             CURLOPT_USERAGENT => 'Datalanche PHP Client',
-            CURLOPT_VERBOSE => true,
+            CURLOPT_VERBOSE => false,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 10,
             );
@@ -398,7 +399,7 @@ class Client
         curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
         echo "\n----------------------------------------------\n";
         echo "query::\n";
-        var_dump(json_encode($postRequestBody));
+        //var_dump(json_encode($postRequestBody));
         echo "\n----------------------------------------------\n";
         $results = $this->handleResults($curlHandle);
 
@@ -554,6 +555,21 @@ class Client
     public function isNotNull($mixedVar)
     {
         return !is_null($mixedVar);
+    }
+
+    public function getClientKey()
+    {
+        return($this->_key);
+    }
+
+    public function getClientSecret()
+    {
+        return($this->_secret);
+    }
+
+    public function getClientUrl()
+    {
+        return($this->_url);
     }
 }
 
