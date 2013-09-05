@@ -297,10 +297,13 @@ class datalancheTestSequence
             return($results);
 
         } elseif ($type === 'post') {
+            echo "WE ARE IN POST!!\n";
             $requestUrl = $client->getClientUrl().$url;
             $curlHandle = $this->rawCurlCreator();
             curl_setopt($curlHandle, CURLOPT_POST, true);
             curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
+                        curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type application/json'));
+            //curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
             curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $body);
 
             echo "|BODY:____________________\n";
@@ -309,7 +312,7 @@ class datalancheTestSequence
             //var_dump(json_encode($body));
             echo "|BODY:____________________\n";
 
-            curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type application/json'));
+
             curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
             $results = $client->handleResults($curlHandle);
             $results = $this->handleTestResult($test, $results, $body);
