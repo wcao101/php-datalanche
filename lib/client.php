@@ -68,6 +68,26 @@ class Client
         return($this);
     }
 
+    public function httpAssocEncode($array)
+    {
+        $requestOption = '?';
+        $end = end($array);
+        foreach($array as $key => $entry)
+        {
+            if($entry === null)
+            {
+                $entry = '';
+            }
+            if($entry == $end)
+            {
+                $requestOption = (string) $requestOption.urlencode($key).'='.urlencode($entry);
+            } else {
+                $requestOption = (string) $requestOption.urlencode($key).'='.urlencode($entry).'&';
+            }
+        }
+        return($requestOption);
+    }
+
     public function curlCreator()
     {
         $options = array (
@@ -90,64 +110,56 @@ class Client
 
     public function getBody($query)
     {
+        
         $queryParameters = $query->getParameters();
         $queryBaseUrl = $query->getBaseUrl();
         $postRequestBody = array();
+        echo "GET BODY:\n";
+        //var_dump($query->getParameters());
+        echo "000000000000\n";
 
         if($query === null){
             throw new Exception("The query for function getBody() was null\n");
             return($requestBody);
         }
 
-        /*
-        if(array_key_exists('debug', $queryParameters))
-        {
-
-            if($queryParameters['debug'] !== null){
-                $postRequestBody['debug'] = $queryParameters['debug'];
-            }else{
-                $postRequestBody['debug'] = false;
-            }
-        }else{
-            $postRequestBody['debug'] = false;
-        }
-        */
 
         if($queryBaseUrl === '/alter_table')
         {
-            if($queryParameters['add_columns'] !== null)
+            if(array_key_exists('add_columns', $queryParameters))
             {
+                //echo "sdkfjskdfjhksdjhfsd\n";
                 $postRequestBody['add_columns'] = $queryParameters['add_columns'];
             }
-            if($queryParameters['alter_columns'] !== null)
+            if(array_key_exists('alter_columns', $queryParameters))
             {
                 $postRequestBody['alter_columns'] = $queryParameters['alter_columns'];
             }
-            if($queryParameters['name'] !== null)
+            if(array_key_exists('table_name', $queryParameters))
             {
-                $postRequestBody['name'] = $queryParameters['name'];
+                $postRequestBody['table_name'] = $queryParameters['table_name'];
             }
-            if($queryParameters['description'] !== null)
+            if(array_key_exists('description', $queryParameters))
             {
                 $postRequestBody['description'] = $queryParameters['description'];
             }
-            if($queryParameters['drop_columns'] !== null)
+            if(array_key_exists('drop_columns', $queryParameters))
             {
                 $postRequestBody['drop_columns'] = $queryParameters['drop_columns'];
             }
-            if($queryParameters['is_private'] !== null)
+            if(array_key_exists('is_private', $queryParameters))
             {
                 $postRequestBody['is_private'] = $queryParameters['is_private'];
             }
-            if($queryParameters['license'] !== null)
+            if(array_key_exists('license', $queryParameters))
             {
                 $postRequestBody['license'] = $queryParameters['license'];
             }
-            if($queryParameters['rename'] !== null)
+            if(array_key_exists('rename', $queryParameters))
             {
                 $postRequestBody['rename'] = $queryParameters['rename'];
             }
-            if($queryParameters['sources'] !== null)
+            if(array_key_exists('sources', $queryParameters))
             {
                 $postRequestBody['sources'] = $queryParameters['sources'];
             }
@@ -156,27 +168,27 @@ class Client
 
         elseif($queryBaseUrl === '/create_table')
         {
-            if($queryParameters['columns'] !== null)
+            if(array_key_exists('columns', $queryParameters))
             {
                 $postRequestBody['columns'] = $queryParameters['columns'];
             }
-            if($queryParameters['name'] !== null)
+            if(array_key_exists('table_name', $queryParameters))
             {
-                $postRequestBody['name'] = $queryParameters['name'];
+                $postRequestBody['table_name'] = $queryParameters['table_name'];
             }
-            if($queryParameters['description'] !== null)
+            if(array_key_exists('description', $queryParameters))
             {
                 $postRequestBody['description'] = $queryParameters['description'];
             }
-            if($queryParameters['is_private'] !== null)
+            if(array_key_exists('is_private', $queryParameters))
             {
                 $postRequestBody['is_private'] = $queryParameters['is_private'];
             }
-            if($queryParameters['license'] !== null)
+            if(array_key_exists('license', $queryParameters))
             {
                 $postRequestBody['license'] = $queryParameters['license'];
             }
-            if($queryParameters['sources'] !== null)
+            if(array_key_exists('sources', $queryParameters))
             {
                 $postRequestBody['sources'] = $queryParameters['sources'];
             }
@@ -184,11 +196,11 @@ class Client
 
         elseif ($queryBaseUrl === '/delete_from')
         {
-            if($queryParameters['name'] !== null)
+            if(array_key_exists('table_name', $queryParameters))
             {
-                $postRequestBody['name'] = $queryParameters['name'];
+                $postRequestBody['table_name'] = $queryParameters['table_name'];
             }
-            if($queryParameters['where'] !== null)
+            if(array_key_exists('where', $queryParameters))
             {
                 $postRequestBody['where'] = $queryParameters['where'];
             }
@@ -196,11 +208,11 @@ class Client
 
         elseif ($queryBaseUrl === '/insert_into')
         {
-            if($queryParameters['name'] !== null)
+            if(array_key_exists('table_name', $queryParameters))
             {
-                $postRequestBody['name'] = $queryParameters['name'];
+                $postRequestBody['table_name'] = $queryParameters['table_name'];
             }
-            if($queryParameters['values'] !== null)
+            if(array_key_exists('values', $queryParameters))
             {
                 $postRequestBody['values'] = $queryParameters['values'];
             }
@@ -208,39 +220,43 @@ class Client
 
         elseif ($queryBaseUrl === '/select_from')
         {
-            if($queryParameters['distinct'] !== null)
+            if(array_key_exists('table_name', $queryParameters))
+            {
+                $postRequestBody['table_name'] = $queryParameters['table_name'];
+            }
+            if(array_key_exists('distinct', $queryParameters))
             {
                 $postRequestBody['distinct'] = $queryParameters['distinct'];
             }
-            if($queryParameters['from'] !== null)
+            if(array_key_exists('from', $queryParameters))
             {
                 $postRequestBody['from'] = $queryParameters['from'];
             }
-            if($queryParameters['group_by'] !== null)
+            if(array_key_exists('group_by', $queryParameters))
             {
                 $postRequestBody['group_by'] = $queryParameters['group_by'];
             }
-            if($queryParameters['limit'] !== null)
+            if(array_key_exists('limit', $queryParameters))
             {
                 $postRequestBody['limit'] = $queryParameters['limit'];
             }
-            if($queryParameters['offset'] !== null)
+            if(array_key_exists('offset', $queryParameters))
             {
                 $postRequestBody['offset'] = $queryParameters['offset'];
             }
-            if($queryParameters['order_by'] !== null)
+            if(array_key_exists('order_by', $queryParameters))
             {
                 $postRequestBody['order_by'] = $queryParameters['order_by'];
             }
-            if($queryParameters['select'] !== null)
+            if(array_key_exists('select', $queryParameters))
             {
                 $postRequestBody['select'] = $queryParameters['select'];
             }
-            if($queryParameters['total'] !== null)
+            if(array_key_exists('total', $queryParameters))
             {
                 $postRequestBody['total'] = $queryParameters['total'];
             }
-            if($queryParameters['where'] !== null)
+            if(array_key_exists('where', $queryParameters))
             {
                 $postRequestBody['where'] = $queryParameters['where'];
             }
@@ -248,15 +264,15 @@ class Client
 
         elseif($queryBaseUrl === '/update')
         {
-            if($queryParameters['name'] !== null)
+            if(array_key_exists('table_name', $queryParameters))
             {
-                $postRequestBody['name'] = $queryParameters['name'];
+                $postRequestBody['table_name'] = $queryParameters['table_name'];
             }
-            if($queryParameters['set'] !== null)
+            if(array_key_exists('set', $queryParameters))
             {
                 $postRequestBody['set'] = $queryParameters['set'];
             }
-            if($queryParameters['where'] !== null)
+            if(array_key_exists('where', $queryParameters))
             {
                 $postRequestBody['where'] = $queryParameters['where'];
             }
@@ -269,6 +285,10 @@ class Client
         }
 
         //$postRequestBody = array_filter($postRequestBody, '!is_null');
+        if(count($postRequestBody) === 0)
+        {
+            $postRequestBody = new stdClass();
+        }
 
         return($postRequestBody);
     }
@@ -284,28 +304,25 @@ class Client
         $queryParameters = $query->getParameters();
         $queryBaseUrl = $query->getBaseUrl();
 
-        $getParameters = array(
-            'debug' => null,
-            'name' => null
-            );
+        $getParameters = array();
 
         if($queryBaseUrl === '/drop_table')
         {
-            if($queryParameters['name'])
+            if($queryParameters['table_name'])
             {
-                $getParameters['name'] = $queryParameters['name'];
-            }elseif(!$queryParameters['name']){
-                $getParameters['name'] = null;
+                $getParameters['table_name'] = $queryParameters['table_name'];
+            }elseif(!$queryParameters['table_name']){
+                $getParameters['table_name'] = null;
             }
         }
 
         elseif($queryBaseUrl === '/get_table_info')
         {
-            if($queryParameters['name'])
+            if($queryParameters['table_name'])
             {
-                $getParameters['name'] = $queryParameters['name'];
-            }elseif(!$queryParameters['name']){
-                $getParameters['name'] = null;
+                $getParameters['table_name'] = $queryParameters['table_name'];
+            }elseif(!$queryParameters['table_name']){
+                $getParameters['table_name'] = null;
             }
         }
 
@@ -316,11 +333,12 @@ class Client
             return($queryBaseUrl);
         }
 
-        $queryString = http_build_query($getParameters);
+        $queryString = $this->httpAssocEncode($getParameters);
+        echo "QUERY: ".$queryString."\n";
 
         if($queryString !== null)
         {
-            $queryBaseUrl = $this->_url.$queryBaseUrl.'?'.$queryString;        
+            $queryBaseUrl = $this->_url.$queryBaseUrl.$queryString;        
         }
 
         return($queryBaseUrl);
@@ -330,6 +348,7 @@ class Client
     {
         $results = null;
         $queryMethodType = $query->getMethodType();
+
 
 
         if(!$query)
@@ -345,6 +364,7 @@ class Client
         }
         if($queryMethodType === 'get')
         {
+            //echo "sdkhjfklsdhfsdjkhfjklsdhfdsjf\n\n";
             $results = $this->clientGet($query);
             return($results);
         }
@@ -364,6 +384,7 @@ class Client
         $httpAuthString = null;
         $requestUrl = null;
         $curlHandle = null;
+        
 
         /*
 
@@ -384,23 +405,31 @@ class Client
 
         $postRequestBody = $this->getBody($query);
         $httpAuthString = (string) $key.":".$secret;
+        /*
         echo "\n-----AUTH-----\n";
         echo "string: ".$httpAuthString."\n";
         echo "key ".$key."\n";
         echo "secret ".$secret."\n";
         echo "\n------------\n";
+        */
         $requestUrl = $this->getUrl($query);
         echo "POST URL FORMULATED: ".$requestUrl."\n";
         $curlHandle = $this->curlCreator();
         curl_setopt($curlHandle, CURLOPT_POST, true);
         curl_setopt($curlHandle, CURLOPT_USERPWD, $httpAuthString);
+        //var_dump($postRequestBody);
+        echo "HERE IS THE ENCODED BODY:\n";
+        ///var_dump(json_encode($postRequestBody));
+        //echo "\n----------------------\n";
         curl_setopt($curlHandle, CURLOPT_POSTFIELDS, json_encode($postRequestBody));
         curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
         curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
+        /*
         echo "\n----------------------------------------------\n";
         echo "query::\n";
         //var_dump(json_encode($postRequestBody));
         echo "\n----------------------------------------------\n";
+        */
         $results = $this->handleResults($curlHandle);
 
         return($results);
@@ -492,17 +521,15 @@ class Client
         try
         {
             $curlInteraction = curl_exec($curlHandle); // now actually making the only outside call
-            $curlDebug = curl_getinfo($curlHandle, true);
-            //echo "///////////////////////////////\n";
-            //echo "curl body:\n:";
-            //var_dump($curl_interaction);
-            //echo "..................\n";
-            $lastCurlError = (string) curl_error($curlHandle);
-            $curlInfo = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
-            $curlDebug = curl_getinfo($curlHandle, 1);
+            $curlInfo = curl_getinfo($curlHandle);
+            //var_dump($curlInfo);
+            //echo "-------------CURL RESPONSE-----------------\n";
+            //var_dump($curlInfo);
+            //var_dump($curlInteraction);
+            //echo "-------------END END END-----------------\n";
             curl_close($curlHandle);
             $transactionErrors = array (
-                'statusCode' => $curlInfo,
+                'statusCode' => $curlInfo['http_code'],
                 );
             if($transactionErrors['statusCode'] === null || $transactionErrors['statusCode'] === '')
             {
@@ -570,6 +597,25 @@ class Client
     public function getClientUrl()
     {
         return($this->_url);
+    }
+
+    public function getDebugInfo($curlHandle, $results, $query)
+    {
+        $curlInfo = curl_getinfo($curlHandle);
+        $debugObject = array(
+                'request' => array (
+                    'method' => $query->getMethodType(),
+                    'url' => $curlInfo['url'],
+                    'headers' => $curlInfo['request_header']
+                    ),
+                'response' => array (
+                    'http_status' => $results['statusCode'],
+                    'http_version' => $results['httpVersion'],
+                    'headers' => $results['headers']
+                    )
+            );
+
+        return($debugObject);
     }
 }
 
