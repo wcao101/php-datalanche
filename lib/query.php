@@ -21,38 +21,16 @@ class Query
         $this->_methodType = 'get';
         $this->_baseUrl = '/';
 
-        $this->_parameters = array (
-            'add_columns' => null,
-            'alter_columns' => null,
-            'columns' => null,
-            'debug' => null,
-            'description' => null,
-            'distinct' => null,
-            'drop_columns' => null,
-            'from' => null,
-            'group_by' => null,
-            'is_private' => null,
-            'license' => null,
-            'limit' => null,
-            'offset' => null,
-            'order_by' => null,
-            'name' => null,
-            'rename' => null,
-            'select' => null,
-            'set' => null,
-            'sources' => null,
-            'total' => null,
-            'values' => null,
-            'where' => null
-            );
+        $this->_parameters = array ();
 
         return($this);
     }
 
     public function addColumn($object)
     {
-        if(!$this->_parameters['add_columns'])
+        if(array_key_exists('add_columns', $this->_parameters) === false)
         {
+            echo "\nadd was not defined\n";
             $this->_parameters['add_columns'] = array();
         }
 
@@ -64,7 +42,7 @@ class Query
    
     public function alterColumn($columnName, $object)
     {
-        if(!$this->_parameters['alter_columns'])
+        if(array_key_exists('alter_columns', $this->_parameters) === false)
         {
             $this->_parameters['alter_column'] = array();
         }
@@ -78,7 +56,7 @@ class Query
     {
         $this->_methodType = 'post';
         $this->_baseUrl = '/alter_table';
-        $this->_parameters['name'] = $tableName;
+        $this->_parameters['table_name'] = $tableName;
 
         return($this);
     }
@@ -94,15 +72,8 @@ class Query
     {
         $this->_methodType = 'post';
         $this->_baseUrl = '/create_table';
-        $this->_parameters['name'] = $tableName;
+        $this->_parameters['table_name'] = $tableName;
 
-        return($this);
-    }
-
-    public function debug($boolean)
-    {
-        $this->_parameters['debug'] = $boolean;
-        
         return($this);
     }
 
@@ -110,7 +81,7 @@ class Query
     {
         $this->_methodType = 'post';
         $this->_baseUrl = '/delete_from';
-        $this->_parameters['name'] = $tableName;
+        $this->_parameters['table_name'] = $tableName;
 
         return($this);
     }
@@ -131,7 +102,7 @@ class Query
 
     public function dropColumn($columnName)
     {
-        if($this->_parameters['drop_columns'] === null)
+        if(array_key_exists('drop_columns', $this->_parameters) === false)
         {
             $this->_parameters['drop_columns'] = array();
         }
@@ -145,7 +116,7 @@ class Query
     {
         $this->_methodType = 'del';
         $this->_baseUrl = '/drop_table';
-        $this->_parameters['name'] = $tableName;
+        $this->_parameters['table_name'] = $tableName;
 
         return($this);
     }
@@ -161,7 +132,7 @@ class Query
     {
         $this->_methodType = 'get';
         $this->_baseUrl = '/get_table_info';
-        $this->_parameters['name'] = $tableName;
+        $this->_parameters['table_name'] = $tableName;
 
         return($this);
     }
@@ -184,14 +155,14 @@ class Query
     {
         $this->_methodType = 'post';
         $this->_baseUrl = '/insert_into';
-        $this->_parameters['name'] = $tableName;
+        $this->_parameters['table_name'] = $tableName;
 
         return($this);
     }
 
     public function isPrivate($boolean)
     {
-        $this->_parameters['is_private'] = (bool) $boolean;
+        $this->_parameters['is_private'] = $boolean;
 
         return($this);
     }
@@ -265,7 +236,7 @@ class Query
     {
         $this->_methodType = 'post';
         $this->_baseUrl = '/update';
-        $this->_parameters['name'] = $tableName;
+        $this->_parameters['table_name'] = $tableName;
 
         return($this);
     }
@@ -303,6 +274,14 @@ class Query
     {
         return($this->_parameters);
     }
+    public function setMethod($method)
+    {
+        $this->_methodType = $method;
+    }
 
+    public function setBaseUrl($url)
+    {
+        $this->_baseUrl = $url;
+    }
 }
 ?>
