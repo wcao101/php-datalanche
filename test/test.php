@@ -62,13 +62,19 @@ class datalancheTestSequence
     public function httpAssocEncode($array)
     {
         $requestOption = '?';
+        $end = end($array);
         foreach($array as $key => $entry)
         {
             if($entry === null)
             {
                 $entry = '';
             }
-            $requestOption = (string) $requestOption.$key.'='.$entry;
+            if($entry === $end)
+            {
+                $requestOption = (string) $requestOption.urlencode($key).'='.urlencode($entry);
+            } else {
+                $requestOption = (string) $requestOption.urlencode($key).'='.urlencode($entry).'&';
+            }
         }
         return($requestOption);
     }
@@ -117,23 +123,29 @@ class datalancheTestSequence
 
     public function scrobbleTestAuth($json, $relevant_parameters)
     {
+        //var_dump($json);
 
         for($i = 0; $i < count($json); $i++)
         {
-            foreach($json[$i]['tests'] as $key => $test)
+            foreach($json[$i]->tests as $key => $test)
             {
-
-                if($test['parameters']['key'] === 'valid_key')
+                //var_dump($test);
+                
+                if($test->parameters->secret === 'valid_secret')
                 {
-                    $json[$i]['tests'][$key]['parameters']['key'] = $relevant_parameters['key'];
+                    //echo "\nfound some valid\n";
+                    $test->parameters->secret = $relevant_parameters['secret'];
                 }
-                if($test['parameters']['secret'] === 'valid_secret')
+                if($test->parameters->key === 'valid_key')
                 {
-                    $json[$i]['tests'][$key]['parameters']['secret'] = $relevant_parameters['secret'];
+                    //echo "\nfound some key\n";
+                    $test->parameters->key = $relevant_parameters['key'];
                 }
-            }
+                
+            }  
         }
-
+        //var_dump($json);
+        //exit();
         return($json);
     }
 
@@ -141,7 +153,7 @@ class datalancheTestSequence
     {
         //$json = scrobbleTestAuth($json, $this->deployed_client_parameters);
 
-        foreach($json['tests'] as $_test)
+        foreach($json->tests as $_test)
         {
             array_push($tests, $_test);
         }
@@ -220,24 +232,33 @@ class datalancheTestSequence
         //echo "TEST INFO:\n";
         //var_dump($test['expected']);
 
-        if($test['expected']['statusCode'] === $datalanche_error['statusCode'])
+        if($test->expected->statusCode === $datalanche_error['statusCode'])
         {
-            echo "----------------------------------------\n";
+            //echo "----------------------------------------\n";
             $_result = 'PASS';
-            echo $_result.":".$test['name']."\n";
-            echo "EXPECTED: ".$test['expected']['statusCode']." RECEIVED: ".$datalanche_error['statusCode']."\n";
+            echo $_result.":".$test->name."\n";
+            echo "EXPECTED: ".$test->expected->statusCode." RECEIVED: ".$datalanche_error['statusCode']."\n";
+
             //var_dump($test['parameters']);
             echo "----------------------------------------\n";
             return(true);
         }else
         {
-            echo "----------------------------------------\n";
-            echo $_result.":".$test['name']."\n";
-            echo "EXPECTED: ".$test['expected']['statusCode']." RECEIVED: ".$datalanche_error['statusCode']."\n";
+            //echo "----------------------------------------\n";
+            echo $_result.":".$test->name."\n";
+            echo "EXPECTED: ".$test->expected->statusCode." RECEIVED: ".$datalanche_error['statusCode']."\n";
+            //echo $client->getClientSecret()."\n";
+            //echo $client->getClientKey()."\n";
             var_dump($test);
             //var_dump(debug_backtrace());
             echo "----------------------------------------\n";
-            exit();
+            if($test->name === "insert_into: values = one full row" || $test->name === "drop_table: table_name = array")
+            {
+                echo "We Found our test";
+                $line = fgets(STDIN);
+            }else {
+                exit();
+            }
             return(false);
         }
         //debug_print_backtrace();
@@ -247,12 +268,16 @@ class datalancheTestSequence
     //ask what is up with this func
     public function useRawQuery($keys, $params)
     {
+        //var_dump($keys);
+        //var_dump($params);
         $use_raw = false;
-        foreach($params as $param)
+        foreach($params as $key => $param)
         {
-            if(array_key_exists($param, $keys) === false)
+            if(in_array($key, $keys) === false)
             {
                 echo "using raw!\n";
+                echo "UNKNOWN VALUE: ";
+                echo "[".$key."]\n";
                 $use_raw = true;
                 break;
             }
@@ -266,10 +291,10 @@ class datalancheTestSequence
     {
         $results = null;
         $pass = false;
-        $authString = $test['parameters']['key'].":".$test['parameters']['secret'];
-        echo "\n--------------------------------------------------\n";
+        $authString = $client->getClientKey().":".$client->getClientSecret();
+        //echo "\n--------------------------------------------------\n";
         echo "QUERY RAW INITIALIZED\n";
-        echo "\n--------------------------------------------------\n";
+        //echo "\n--------------------------------------------------\n";
 
 
         if($type === 'del')
@@ -297,20 +322,40 @@ class datalancheTestSequence
             return($results);
 
         } elseif ($type === 'post') {
-            echo "WE ARE IN POST!!\n";
+            //echo "WE ARE IN POST!!\n";
             $requestUrl = $client->getClientUrl().$url;
             $curlHandle = $this->rawCurlCreator();
-            curl_setopt($curlHandle, CURLOPT_POST, true);
-            curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
-                        curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type application/json'));
-            //curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
-            curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $body);
 
             echo "|BODY:____________________\n";
-            var_dump($body);
-            echo gettype($body)."\n";
-            //var_dump(json_encode($body));
-            echo "|BODY:____________________\n";
+            //$body = json_encode($body);
+            //$body = (string) json_encode($body);
+            echo "\n";
+            //echo gettype($body)."\n";
+            //var_dump($body);
+            echo json_encode($body)."\n";
+
+            if(is_array($body) && count($body) === 0)
+            {
+                $body = null;
+            }else{
+            
+                if($test->expected->statusCode === 200)
+                {
+                    $body = json_encode($body, JSON_FORCE_OBJECT | JSON_NUMERIC_CHECK);
+                }else{
+                    $body = json_encode($body, JSON_NUMERIC_CHECK);
+                }
+            }
+            echo "|||||||||||||||||||||||||\n";
+            
+            curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
+            //curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type application/json', 'Content-Length: '.strlen($body)));
+            //curl_setopt($curlHandle, CURLOPT_POST, true);
+            curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $body);
+            curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
+            
+            
+
 
 
             curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
@@ -324,9 +369,9 @@ class datalancheTestSequence
     public function alterTable($test, $client)
     {
         $_results = null;
-        $params = $test['parameters'];
+        $params = $test->parameters;
         $keys = array(
-            'name',
+            'table_name',
             'rename',
             'description',
             'is_private',
@@ -334,58 +379,84 @@ class datalancheTestSequence
             'sources',
             'add_columns',
             'drop_columns',
-            'alter_columns'
+            'alter_columns',
+            'key',
+            'secret'
             );
 
         $use_raw = $this->useRawQuery($keys, $params);
 
         if($use_raw === true)
         {
-            unset($params['key']); unset($params['secret']);
+            unset($params->key); unset($params->secret);
             $_results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
             return($_results);
         }else 
         {
             $query = new Query();
-            unset($params['key']); unset($params['secret']);
-            $query->alterTable($params['name']);
-            $query->rename($params['rename']);
-            $query->description($params['description']);
-            $query->isPrivate($params['is_private']);
-            $query->license($params['license']);
-            $query->sources($params['sources']);
-            if(is_array($params['add_columns']) === true)
+            unset($params->key); unset($params->secret);
+            if(property_exists($params, 'table_name') === true)
             {
-                for($i = 0; $i < count($params['add_columns']); $i++)
-                {
-                    $query->addColumn($params['add_columns'][$i]);
-                }
+                //echo "man\n";
+                $query->alterTable($params->table_name);
             } else {
-                $query->parameters['add_columns'] = $params['add_columns'];
+                //echo "fun\n";
+                $query->setMethod('post');
+                $query->setBaseUrl('/alter_table');
             }
-
-            if(is_array($params['drop_columns']) === true)
+            if(property_exists($params, 'rename'))
             {
-                for($i = 0; $i < count($params['drop_columns']); $i++)
+                $query->rename($params->rename);
+            }
+            elseif(property_exists($params, 'description'))
+            {
+                $query->description($params->description);
+            }
+            elseif(property_exists($params, 'is_private'))
+            {
+                $query->isPrivate($params->is_private);
+            }
+            elseif(property_exists($params, 'license'))
+            {
+                $query->license($params->license);
+            }
+            elseif(property_exists($params, 'sources'))
+            {
+                $query->sources($params->sources);
+            }
+            if(property_exists($params, 'add_columns') && is_array($params->add_columns) === true)
+            {
+                for($i = 0; $i < count($params->add_columns); $i++)
                 {
-                    $query->addColumn($params['drop_columns'][$i]);
+                    $query->addColumn($params->add_columns[$i]);
                 }
-            }else {
-                $query->parameters['drop_columns'] = $params['drop_columns'];
+            } elseif(property_exists($params, 'add_columns')) {
+                $_results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
+                return($_results);
+            }
+            if(property_exists($params, 'drop_columns') && is_array($params->drop_columns) === true)
+            {
+                for($i = 0; $i < count($params->drop_columns); $i++)
+                {
+                    $query->dropColumn($params->drop_columns[$i]);
+                }
+            }elseif(property_exists($params, 'drop_columns')) {
+                $_results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
+                return($_results);
             }
 
-            if(is_object($params['alter_columns']) === true && count(get_object_vars($params)) > 0)
+            if(property_exists($params, 'alter_columns') && is_object($params->alter_columns) === true && count(get_object_vars($params)) > 0)
             {
-                foreach($params['alter_columns'] as $key => $value)
+                foreach($params->alter_columns as $key => $value)
                 {
                     $query->alterColumn($key, $value);
                 }
-            } else {
-                $query->parameters['alter_columns'] = $params['alter_columns'];
+            } elseif(property_exists($params, 'alter_columns')) {
+                $_results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
+                return($_results);
             }
-
             $_results = $client->query($query);
-            $_results = handleTestResult($test, $_results, $params);
+            $_results = $this->handleTestResult($test, $_results, $params);
 
             return($_results);
         }
@@ -396,17 +467,19 @@ class datalancheTestSequence
     public function createTable($test, $client)
     {
         echo "we are in create_table\n";
-        $params = $test['parameters'];
+        $params = $test->parameters;
         $use_raw = null;
         $_results = null;
         $_query = null;
         $keys = array(
-            'name',
+            'table_name',
             'description',
             'is_private',
             'license',
             'sources',
-            'columns'
+            'columns',
+            'key',
+            'secret'
             );
 
         $use_raw = $this->useRawQuery($keys, $params);
@@ -415,23 +488,52 @@ class datalancheTestSequence
 
         if($use_raw === true)
         {
-            unset($params['key']); unset($params['secret']);
+            echo "RAW CREATE\n";
+            unset($params->key); unset($params->secret);
             $_results = $this->queryRaw($client, $test, 'post', '/create_table', $params);
             return($_results);
         } else
         {
+            echo ("GOOD\n");
 
             $_query = new Query();
-            unset($params['key']); unset($params['secret']);
-            $_query->createTable($params['name']);
-            $_query->description($params['description']);
-            $_query->isPrivate((bool) $params['is_private']);
-            $_query->license($params['license']);
-            $_query->sources($params['sources']);
-            $_query->columns($params['columns']);
-            echo "create table\n";
+            unset($params->key); unset($params->secret);
+            if(isset($params->table_name))
+            {
+                $_query->createTable($params->table_name);
+            }else{
+                if(property_exists($params, 'table_name'))
+                {
+                    echo "\nBALLLS!!\n";
+                    $_query->createTable($params->table_name);
+                } else {
+                    $_query->setMethod('post');
+                    $_query->setBaseUrl('/create_table');
+                }
+            }
+            if(property_exists($params, 'description'))
+            {
+                $_query->description($params->description);
+            }
+            if(property_exists($params, 'is_private'))
+            {  
+                $_query->isPrivate($params->is_private);
+            }
+            if(property_exists($params, 'license'))
+            {
+                $_query->license($params->license);
+            }
+            if(property_exists($params, 'sources'))
+            {
+                $_query->sources($params->sources);
+            }
+            if(property_exists($params, 'columns'))
+            {
+                $_query->columns($params->columns);
+            }
+            //echo "create table\n";
             //var_dump($_query);
-
+            echo "test\n";
             $_results = $client->query($_query);
             $_results = $this->handleTestResult($test, $_results, $params);
 
@@ -444,21 +546,38 @@ class datalancheTestSequence
         $use_raw = null;
         $_results = null;
         $_query = null;
-        $params = $test['parameters'];
-        $keys = array( 'name' );
+        $params = $test->parameters;
+        $keys = array( 'table_name', 'key', 'secret' );
 
         $use_raw = $this->useRawQuery($keys, $params);
 
         if($use_raw === true)
         {
-            unset($params['key']); unset($params['secret']);
+            unset($params->key); unset($params->secret);
             $_results = $this->queryRaw($client, $test, 'del', '/drop_table', $params);
             return($_results);
         } else
         {
             $_query = new Query();
-            unset($params['key']); unset($params['secret']);
-            $_query->dropTable($params['name']);
+            unset($params->key); unset($params->secret);
+            if(property_exists($params, 'table_name'))
+            {
+                if(is_bool($params->table_name))
+                {
+                    if($params->table_name === true)
+                    {
+                        $params->table_name = "true";
+                    } elseif ($params->table_name === false) {
+                        $params->table_name = "false";
+                    }
+                }
+                $_query->dropTable($params->table_name);
+            } else {
+                $_query->setMethod('post');
+                $_query->setBaseUrl('/drop_table');
+                $_results = $this->queryRaw($client, $test, 'del', '/drop_table', $params);
+                return($_results);
+            }
             $_results = $client->query($_query);
             $_results = $this->handleTestResult($test, $_results, $params);
             return($_results);
@@ -470,21 +589,32 @@ class datalancheTestSequence
         $_results = null;
         $_query = null;
         $use_raw = null;
-        $params = $test['parameters'];
-        $keys = array( 'name', 'where' );
+        $params = $test->parameters;
+        $keys = array( 'table_name', 'where', 'key', 'secret' );
 
         $use_raw = $this->useRawQuery($keys, $params);
 
         if($use_raw === true)
         {
-            unset($params['key']); unset($params['secret']);
+            unset($params->key); unset($params->secret);
             $_results = $this->queryRaw($client, $test, 'post', '/delete_from', $params);
             return($_results);
         } else
         {
             $_query = new Query();
-            $_query->deleteFrom($params['name']);
-            $_query->where(json_encode($params['where']));
+            if(property_exists($params, 'table_name'))
+            {
+                $_query->deleteFrom($params->table_name);
+            }else {
+                $_query->setMethod('post');
+                $_query->setBaseUrl('/delete_from');
+                $_results = $this->queryRaw($client, $test, 'post', '/delete_from', $params);
+                return($_results);
+            }
+            if(property_exists($params, 'where'))
+            {
+                $_query->deleteFrom($params->table_name)->where($params->where);
+            }
             echo "this should be it\n";
             //var_dump($params['where']);
             $_results = $client->query($_query);
@@ -498,25 +628,25 @@ class datalancheTestSequence
         $_results = null;
         $_query = null;
         $use_raw = null;
-        $params = $test['parameters'];
-        $keys = array();
+        $params = $test->parameters;
+        $keys = array('key', 'secret');
 
         $use_raw = $this->useRawQuery($keys, $params);
 
         if($use_raw === true)
         {
-            unset($params['key']); unset($params['secret']);
+            unset($params->key); unset($params->secret);
             echo "QUERY RAW QUERY RAW\n";
             $_results = $this->queryRaw($client, $test, 'get', '/get_table_list', $params);
             return($_results);
         } else
-        {       if($test['expected'] === 200)
+        {       if($test->expected === 200)
                 {       
                     $_query = new Query();
                 }else {
                     $_query= new Query();
                 }
-                unset($params['key']); unset($params['secret']);
+                unset($params->key); unset($params->secret);
                 $_query->getTableList();
                 $_results = $client->query($_query);
             
@@ -531,21 +661,43 @@ class datalancheTestSequence
         $_query = null;
         $_results = null;
         $use_raw = null;
-        $params = $test['parameters'];
-        $keys = array( 'name' );
+        $params = $test->parameters;
+        $keys = array( 'table_name', 'key', 'secret' );
 
         $use_raw = $this->useRawQuery($keys, $params);
         
         if($use_raw === true)
         {
-            unset($params['key']); unset($params['secret']);
+            unset($params->key); unset($params->secret);
             $_results = $this->queryRaw($client, $test, 'get', '/get_table_info', $params);
             return($_results);
         } else
         {
             $_query = new Query();
-            unset($params['key']); unset($params['secret']);
-            $_query->getTableInfo($params['name']);
+            unset($params->key); unset($params->secret);
+            if(property_exists($params, 'table_name') === true)
+            {
+                if($params->table_name === null)
+                {
+                    echo "SPECIAL FOUND\n";
+                    $_results = $this->queryRaw($client, $test, 'get', '/get_table_info', $params);
+                    return($_results);
+                }else{
+                    if(is_bool($params->table_name))
+                    {
+                        if($params->table_name === true)
+                        {
+                            $params->table_name = "true";
+                        }elseif($params->table_name === false) {
+                            $params->table_name = "false";
+                        } 
+                    }
+                    $_query->getTableInfo($params->table_name);
+                }
+            } else {
+                $_results = $this->queryRaw($client, $test, 'get', '/get_table_info', $params);
+                return($_results);
+            }
             $_results = $client->query($_query);
             $_results = $this->handleTestResult($test, $_results, $params);
             return($_results);
@@ -559,26 +711,35 @@ class datalancheTestSequence
         $_query = null;
         $_rows = null;
         $use_raw = null;
-        $params = $test['parameters'];
-        $keys = array( 'name', 'values' );
+        $params = $test->parameters;
+        $keys = array( 'table_name', 'values', 'key', 'secret' );
 
         $use_raw = $this->useRawQuery($keys, $params);
 
         if($use_raw === true)
         {
-            unset($params['key']); unset($params['secret']);
+            unset($params->key); unset($params->secret);
             $_results = $this->queryRaw($client, $test, 'post', '/insert_into', $params);
             return($_results);
         }else
         {
             $_query = new Query();
-            unset($params['key']); unset($params['secret']);
-            $_query->insertInto($params['name']);
+            unset($params->key); unset($params->secret);
+            if(property_exists($params, 'table_name'))
+            {
+                echo "found property\n";
+                $_query->insertInto($params->table_name);
+            }else {
+                $_query->setMethod('post');
+                $_query->setBaseUrl('/insert_into');
+                $_results = $this->queryRaw($client, $test, 'post', '/insert_into', $params);
+                return($_results);
+            }
 
-            if($params['values'] === 'dataset_file')
+            if($params->values === 'dataset_file')
             {
                 //var_dump($test);
-                $_path = realpath("../../api-server/tests/".$test['dataset_file']);
+                $_path = realpath("../../api-server/tests/".$test->dataset_file);
                 $_rows = $this->getRecordsFromFile($_path);
                 $_query->values($_rows);
                 $_results = $client->query($_query);
@@ -586,7 +747,10 @@ class datalancheTestSequence
                 return($_results);
             }else
             {
-                $_query->values($params['values']);
+                if(property_exists($params, 'values'))
+                {
+                    $_query->values($params->values);
+                }
                 $_results = $client->query($_query);
                 $_results = $this->handleTestResult($test, $_results, $params);
                 return($_results);
@@ -599,7 +763,7 @@ class datalancheTestSequence
         $use_raw = null;
         $_results = null;
         $_query = null;
-        $params = $test['parameters'];
+        $params = $test->parameters;
         $keys = array(
             'select',
             'distinct',
@@ -609,31 +773,66 @@ class datalancheTestSequence
             'order_by',
             'offset',
             'limit',
-            'total'
+            'total',
+            'key',
+            'secret',
+            'table_name'
             );
 
         $use_raw = $this->useRawQuery($keys, $params);
 
         if($use_raw === true)
         {
-            unset($params['key']); unset($params['secret']);
+            unset($params->key); unset($params->secret);
             $_results = $this->queryRaw($client, $test, 'post', '/select_from', $params);
             return($_results);
         }else
         {
             $_query = new Query();
-            unset($params['key']); unset($params['secret']);
-            $_query->select($params['select']);
-            $_query->distinct($parmas['distinct']);
-            $_query->from($params['from']);
-            $_query->where(json_encode($params['where']));
+            unset($params->key); unset($params->secret);
+            if(property_exists($params, 'select'))
+            {
+                $_query->select($params->select);
+            } else {
+                $_query->setMethod('post');
+                $_query->setBaseUrl('/select_from');
+                $_results = $this->queryRaw($client, $test, 'post', '/select_from', $params);
+                return($_results);
+            }
+            if(property_exists($params, 'distinct'))
+            {
+                $_query->distinct($params->distinct);
+            }
+            if(property_exists($params, 'from'))
+            {
+                $_query->from($params->from);
+            }
+            if(property_exists($params, 'where'))
+            {
+                $_query->where($params->where);
+            }
             //echo "this should be it\n";
             //var_dump($params['where']);;
-            $_query->groupBy($params['group_by']);
-            $_query->orderBy($params['order_by']);
-            $_query->offset($params['offset']);
-            $_query->limit($params['limit']);
-            $_query->total($params['total']);
+            if(property_exists($params, 'group_by'))
+            {
+                $_query->groupBy($params->group_by);
+            }
+            if(property_exists($params, 'order_by'))
+            {
+                $_query->orderBy($params->order_by);
+            }
+            if(property_exists($params, 'offset'))
+            {
+                $_query->offset($params->offset);
+            }
+            if(property_exists($params, 'limit'))
+            {
+                $_query->limit($params->limit);
+            }
+            if(property_exists($params, 'total'))
+            {
+                $_query->total($params->total);
+            }
 
             $_results = $client->query($_query);
             $_results = $this->handleTestResult($test, $_results, $params);
@@ -646,22 +845,36 @@ class datalancheTestSequence
         $use_raw = null;
         $_results = null;
         $_query = null;
-        $params = $test['parameters'];
-        $keys = array ('name', 'set', 'where');
+        $params = $test->parameters;
+        $keys = array ('table_name', 'set', 'where', 'key', 'secret');
 
         $use_raw = $this->useRawQuery($keys, $params);
 
         if($use_raw === true)
         {
-            unset($params['key']); unset($params['secret']);
+            unset($params->key); unset($params->secret);
             $_results = $this->queryRaw($client, $test, 'post', '/update', $params);
             return($_results);
         }else
         {
             $_query = new Query();
-            $_query->update($params['name']);
-            $_query->set($params['set']);
-            $_query->where(json_encode($params['where']));
+            if(property_exists($params, 'table_name'))
+            {
+                $_query->update($params->table_name);
+            } else {
+                $_query->setMethod('post');
+                $_query->setBaseUrl('/update');
+                $_results = $this->queryRaw($client, $test, 'post', '/update', $params);
+                return($_results);
+            }
+            if(property_exists($params, 'set'))
+            {
+                $_query->set($params->set);
+            }
+            if(property_exists($params, 'where'))
+            {
+                $_query->where($params->where);
+            }
             echo "this should be it:\n";
             //var_dump($params['where']);
             $_results = $client->query($_query);
@@ -673,7 +886,7 @@ class datalancheTestSequence
     public function execute($test, $client)
     {
         $_results = null;
-        $compare = (string) $test['method'];
+        $compare = (string) $test->method;
 
         if($compare === 'alter_table')
         {
@@ -732,6 +945,7 @@ class datalancheTestSequence
         {
             $client->query($_query->dropTable('test_dataset'));
             $client->query($_query->dropTable('new_test_dataset'));
+            $client->query($_query->dropTable('45'));
         }catch(Exception $e){
             echo $e."\n";
         }
@@ -757,8 +971,9 @@ class datalancheTestSequence
         {
             $_file = $root_dir.'/'.$contents['suites']['all'][$i];
             //echo $_file."\n";
-            $_json = json_decode(file_get_contents($_file), true);
+            $_json = json_decode(file_get_contents($_file));
             array_push($tests, $_json);
+            //var_dump($_json);
         }
 
         $client = new Client($this->deployed_client_parameters['secret'],
@@ -772,10 +987,10 @@ class datalancheTestSequence
 
         for($i = 0; $i < count($tests); $i++)
         {
-            foreach($tests[$i]['tests'] as $key => $test)
+            foreach($tests[$i]->tests as $key => $test)
             {
-                $client->setClientKey($test['parameters']['key']);
-                $client->setClientSecret($test['parameters']['secret']);
+                $client->setClientKey($test->parameters->key);
+                $client->setClientSecret($test->parameters->secret);
                 $_results = $this->execute($test, $client);
                 if($_results)
                 {
