@@ -21,7 +21,7 @@ class Query
         $this->_methodType = 'get';
         $this->_baseUrl = '/';
 
-        $this->_parameters = array ();
+        $this->_parameters = array();
 
         return($this);
     }
