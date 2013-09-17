@@ -10,7 +10,7 @@
 /* DEPENDICES */
 include 'query.php';
 include 'expression.php';
-//include 'DLException.php';
+include 'DLException.php';
 
 class Client 
 {
@@ -91,7 +91,7 @@ class Client
     public function curlCreator()
     {
         $options = array (
-            CURLOPT_HEADER => false,
+            CURLOPT_HEADER => true,
             CURLOPT_ENCODING => 'gzip',
             CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
             CURLOPT_SSLVERSION => 3,
@@ -102,10 +102,71 @@ class Client
             CURLOPT_VERBOSE => false,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 10,
+            CURLINFO_HEADER_OUT => true
             );
         $curlHandle = curl_init();
         curl_setopt_array($curlHandle, $options);
         return($curlHandle);
+    }
+
+    public function resultsMediator($serverResponseString, $curlInfoArray)
+    {
+        //var_dump($serverResponseString);
+        //var_dump($curlInfoArray);
+        //exit();
+        $statusArray = array();
+        $statusArray['request'] = array();
+        $statusArray['response'] = array();
+        $statusArray['request']['header'] = array();
+        $statusArray['response']['header'] = array();
+        $statusArray['response']['body'] = array();
+
+        $responseHeader = substr($serverResponseString, 0, $curlInfoArray['header_size']);
+        $responseBody = substr($serverResponseString, $curlInfoArray['header_size']);
+        $responseHeader = explode("\n", $responseHeader);
+        $statusArray['response']['header']['status'] = $responseHeader[0];
+
+        array_shift($responseHeader);
+
+        foreach($responseHeader as $value)
+        {
+            $middle = explode(":", $value);
+            if(count($middle) <= 1)
+            {
+                //the explode function has created a white-space entry
+            }else{
+
+                $statusArray['response']['header'][trim($middle[0])] = trim($middle[1]);
+            }
+        }
+
+        $responseBody = json_decode($responseBody, true);
+
+        $statusArray['response']['body'] = $responseBody;
+        $statusArray['response']['header']['http_code'] = $curlInfoArray['http_code'];
+
+        $requestHeader = explode("\n", $curlInfoArray['request_header']);
+        $statusArray['request']['header']['operation'] = explode(" ", $requestHeader[0]);
+        $statusArray['request']['header']['url_parameters'] = $statusArray['request']['header']['operation'][1];
+        $statusArray['request']['header']['http_version'] = $statusArray['request']['header']['operation'][2];
+        $statusArray['request']['header']['operation'] = $statusArray['request']['header']['operation'][0];
+
+        array_shift($requestHeader);
+
+        foreach($requestHeader as $value)
+        {
+            $middle = explode(":", $value);
+            if(count($middle) <= 1)
+            {
+                //the explode function has created a white-space entry
+            }else{
+
+                $statusArray['request']['header'][trim($middle[0])] = trim($middle[1]);
+            }
+        }
+        $statusArray['curl_info_array'] = $curlInfoArray;
+
+        return($statusArray);
     }
 
     public function getBody($query)
@@ -114,9 +175,6 @@ class Client
         $queryParameters = $query->getParameters();
         $queryBaseUrl = $query->getBaseUrl();
         $postRequestBody = array();
-        echo "GET BODY:\n";
-        //var_dump($query->getParameters());
-        echo "000000000000\n";
 
         if($query === null){
             throw new Exception("The query for function getBody() was null\n");
@@ -329,7 +387,7 @@ class Client
         elseif($queryBaseUrl === '/get_table_list')
         {
             $queryBaseUrl = $this->_url.$queryBaseUrl;
-            echo "get table list found: ".$queryBaseUrl."\n";
+            //echo "get table list found: ".$queryBaseUrl."\n";
             return($queryBaseUrl);
         }
 
@@ -379,57 +437,23 @@ class Client
     {
         $key = $this->_key;
         $secret = $this->_secret;
-        $results = null;
-        $postRequestBody = null;
-        $httpAuthString = null;
-        $requestUrl = null;
-        $curlHandle = null;
-        
-
-        /*
-
-        if($query->test_key !== null)
-        {
-            $_key = $query->test_key;
-        }else {
-            $_key = $this->key;
-        }
-
-        if($query->test_secret !== null)
-        {
-            $_secret = $query->test_secret;
-        }else {
-            $_secret = $this->secret;
-        }
-        */
-
         $postRequestBody = $this->getBody($query);
         $httpAuthString = (string) $key.":".$secret;
-        /*
-        echo "\n-----AUTH-----\n";
-        echo "string: ".$httpAuthString."\n";
-        echo "key ".$key."\n";
-        echo "secret ".$secret."\n";
-        echo "\n------------\n";
-        */
         $requestUrl = $this->getUrl($query);
-        echo "POST URL FORMULATED: ".$requestUrl."\n";
         $curlHandle = $this->curlCreator();
+        $completeInfoArray = $query->getParameters();
+        $results = null;
+
+        //deprecated
+        $completeInfoArray['post_request_body'] = $postRequestBody;
+        $completeInfoArray['method'] = $query->getMethodType();
+
         curl_setopt($curlHandle, CURLOPT_POST, true);
         curl_setopt($curlHandle, CURLOPT_USERPWD, $httpAuthString);
-        //var_dump($postRequestBody);
-        echo "HERE IS THE ENCODED BODY:\n";
-        ///var_dump(json_encode($postRequestBody));
-        //echo "\n----------------------\n";
         curl_setopt($curlHandle, CURLOPT_POSTFIELDS, json_encode($postRequestBody));
         curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
         curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
-        /*
-        echo "\n----------------------------------------------\n";
-        echo "query::\n";
-        //var_dump(json_encode($postRequestBody));
-        echo "\n----------------------------------------------\n";
-        */
+
         $results = $this->handleResults($curlHandle);
 
         return($results);
@@ -439,33 +463,20 @@ class Client
     {
         $key = $this->_key;
         $secret = $this->_secret;
-        $results = null;
-        $httpAuthString = null;
-        $requestUrl = null;
-        $curlHandle = null;
-
-        ///test for subbed key
-        /*
-        if($query->test_key !== null)
-        {
-            $_key = $query->test_key;
-        }else {
-            $_key = $this->key;
-        }
-        ///test for subbed secret
-        if($query->test_secret !== null)
-        {
-            $_secret = $query->test_secret;
-        }else {
-            $_secret = $this->secret;
-        }
-        */
-
         $httpAuthString = (string) $key.":".$secret;
         $requestUrl = $this->getUrl($query);
         $curlHandle = $this->curlCreator();
+        $completeInfoArray = $query->getParameters();
+        $postRequestBody = null;
+        $results = null;
+
+        //deprecated
+        $completeInfoArray['post_request_body'] = $postRequestBody;
+        $completeInfoArray['method'] = $query->getMethodType();
+
         curl_setopt($curlHandle, CURLOPT_USERPWD, $httpAuthString);
         curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
+
         $results = $this->handleResults($curlHandle);
 
         return($results);
@@ -475,35 +486,21 @@ class Client
     {
         $key = $this->_key;
         $secret = $this->_secret;
-        $results = null;
-        $httpAuthString = null;
-        $requestUrl = null;
-        $curlHandle = null;
-
-        /*
-        if($query->test_key !== null)
-        {
-             $_key = $query->test_key;
-        }else {
-             $_key = $this->key;
-        }
-        if($query->test_secret !== null)
-        {
-            $_secret = $query->test_secret;
-        }else {
-            $_secret = $this->secret;
-        }
-        */
-
-        //now creating the specific authstring
         $httpAuthString = (string) $key.":".$secret;
-        //setting url and curl_request handle
         $requestUrl = $this->getUrl($query);
         $curlHandle = $this->curlCreator();
+        $completeInfoArray = $query->getParameters();
+        $postRequestBody = null;
+        $results = null;
+
+        //deprecated
+        $completeInfoArray['post_request_body']  = $postRequestBody;
+        $completeInfoArray['method'] = $query->getMethodType();
 
         curl_setopt($curlHandle, CURLOPT_CUSTOMREQUEST, 'DELETE');
         curl_setopt($curlHandle, CURLOPT_USERPWD, $httpAuthString);
         curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
+
         $results = $this->handleResults($curlHandle);
 
         return($results);
@@ -513,45 +510,26 @@ class Client
     {
         //handle results gets curl handle, executes it, and
         //then returns pertinant results about the interaction
-        $curlInteraction = null; //variable for curl execution handle
-        $lastCurlError = null; //variable for curl end session error output
-        $curlDebug = null;
+        $curlExecResult = null; //variable for curl execution handle
         $curlInfo = null;
-        $transactionErrors = null;
+        $responseObject = null;
+
+        $curlExecResult = curl_exec($curlHandle); // now actually making the only outside call  
+        $curlInfo = curl_getinfo($curlHandle);
+        curl_close($curlHandle);
+
+        $responseObject = $this->getDebugInfo($curlInfo, $curlExecResult);
         try
         {
-            $curlInteraction = curl_exec($curlHandle); // now actually making the only outside call
-            $curlInfo = curl_getinfo($curlHandle);
-            //var_dump($curlInfo);
-            //echo "-------------CURL RESPONSE-----------------\n";
-            //var_dump($curlInfo);
-            //var_dump($curlInteraction);
-            //echo "-------------END END END-----------------\n";
-            curl_close($curlHandle);
-            $transactionErrors = array (
-                'statusCode' => $curlInfo['http_code'],
-                );
-            if($transactionErrors['statusCode'] === null || $transactionErrors['statusCode'] === '')
-            {
-
+            if($curlInfo['http_code'] < 200 || $curlInfo['http_code'] > 300) {
+                throw new DLException($responseObject);
             }
-                /*
-                echo "++++++++++++++++++++++++++++++++++++++++++++\n";
-                echo "GOT CODE: ".$transaction_errors['statusCode']."\n";
-                echo "CURL INFO DUMP:\n";
-                var_dump($curl_debug);
-                echo "++++++++++++++++++++++++++++++++++++++++++++\n";
-                */
-           // echo "LAST CURL ERROR: ".$curl_info."\n";
-        } catch (Exception $e) {
-            echo "curl error: ".$e;
+        }catch(DLException $e) {
+            echo "DL-ERROR: ".$e."\n";
         }
 
-        if($lastCurlError){
-            array_push($this->_curlStatusArray, json_decode($lastCurlError));
-        }
 
-        return($transactionErrors);
+        return($responseObject);
     }
 
     public function setClientKey($key)
@@ -599,20 +577,32 @@ class Client
         return($this->_url);
     }
 
-    public function getDebugInfo($curlHandle, $results, $query)
+    public function getDebugInfo($curlInfo, $curlExecResult)
     {
-        $curlInfo = curl_getinfo($curlHandle);
+        $curlExecResultArray = $this->resultsMediator($curlExecResult, $curlInfo);
+        //var_dump($curlExecResultArray);
+        /*
+        echo "curl info:\n";
+        var_dump($curlInfo);
+        echo "curl exec results:\n";
+        echo "completeInfoArray:\n";
+        var_dump($completeInfoArray);
+        */
+        
         $debugObject = array(
                 'request' => array (
-                    'method' => $query->getMethodType(),
-                    'url' => $curlInfo['url'],
-                    'headers' => $curlInfo['request_header']
+                    'method' => $curlExecResultArray['request']['header']['operation'],
+                    'url' => $curlExecResultArray['curl_info_array']['url'],
+                    'headers' => $curlExecResultArray['request']['header']
                     ),
+                'body' => $curlExecResultArray['request']['header']['url_parameters'],
                 'response' => array (
-                    'http_status' => $results['statusCode'],
-                    'http_version' => $results['httpVersion'],
-                    'headers' => $results['headers']
-                    )
+                    'http_status' => $curlExecResultArray['response']['header']['http_code'],
+                    'http_version' => $curlExecResultArray['request']['header']['http_version'],
+                    'headers' => $curlExecResultArray['response']['header']
+                    ),
+                'data' => $curlExecResultArray['response']['body'],
+                'curl_info_array' => $curlExecResultArray['curl_info_array']
             );
 
         return($debugObject);
