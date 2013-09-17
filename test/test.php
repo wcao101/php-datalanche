@@ -22,68 +22,85 @@ class datalancheTestSequence
             );
         $this->runtime_messages = array();
 
-        if($_secret !== null)
-        {
+        if($_secret !== null) {
+
             $this->deployed_client_parameters['secret'] = $_secret;
         }
-        if($_key !== null)
-        {
+        
+        if($_key !== null) {
+
             $this->deployed_client_parameters['key'] = $_key;
         }
-        if($_host !== null)
-        {
+        
+        if($_host !== null) {
+
             $this->deployed_client_parameters['host'] = $_host;
         }
-        if($_port !== null)
-        {
+
+        if($_port !== null) {
+
             $this->deployed_client_parameters['port'] = $_port;
         }
-        if($_ssl !== null)
-        {
+
+        if($_ssl !== null) {
+
             $this->deployed_client_parameters['ssl'] = $_ssl;
         }
-        if($_test_suite !== null)
-        {
+
+        if($_test_suite !== null) {
+
             $this->deployed_client_parameters['test_suite'] = $_test_suite;
-        }elseif($_test_suite === null){
+
+        } elseif ($_test_suite === null) {
+
             $this->deployed_client_parameters['test_suite'] = 'all';
         }
-        if($_test_dataset_path !== null)
-        {
+
+        if($_test_dataset_path !== null) {
+
             $this->deployed_client_parameters['test_dataset_path'] = $_test_dataset_path;
-        }elseif($_test_dataset_path === null){
-            throw new Exception("THE PATH FOR DATASET TEST CONTENT WAS NULL\n");
+
+        } elseif ($_test_dataset_path === null) {
+
+            throw new Exception("Unable to open dataset path, detected null entry. Now Exiting");
+
             exit();
         }
 
-        return($this);
+        return $this;
     }
     
     public function httpAssocEncode($array)
     {
-        $requestOption = '?';
-        $end = end($array);
-        foreach($array as $key => $entry)
-        {
-            if($entry === null)
-            {
+        $requestOption = '';
+        $arrayEnd = end($array);
+        foreach($array as $key => $entry) {
+
+            if($entry === null) {
+
                 $entry = '';
             }
-            if($entry === $end)
-            {
+            
+            if($entry === $arrayEnd) {
+
                 $requestOption = (string) $requestOption.urlencode($key).'='.urlencode($entry);
+
             } else {
+
                 $requestOption = (string) $requestOption.urlencode($key).'='.urlencode($entry).'&';
             }
         }
-        return($requestOption);
+
+        $requestOption = (string) "?".$requestOption;
+
+        return $requestOption;
     }
 
      public function rawCurlCreator()
     {
         //same as $client->curlCreator()
         $options = array (
-            CURLOPT_HEADER => false,
+            CURLOPT_HEADER => true,
             CURLOPT_ENCODING => 'gzip',
             CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
             CURLOPT_SSLVERSION => 3,
@@ -94,10 +111,14 @@ class datalancheTestSequence
             CURLOPT_VERBOSE => false,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 10,
+            CURLINFO_HEADER_OUT => true
             );
+
         $curlHandle = curl_init();
+
         curl_setopt_array($curlHandle, $options);
-        return($curlHandle);
+
+        return $curlHandle;
     }
 
     public function startsWith ($haystack, $needle)
@@ -107,9 +128,9 @@ class datalancheTestSequence
 
     public function endsWtih ($haystack, $needle)
     {
-        $length = stlen($needle);
-        if ($length == 0)
-        {
+        $length = strlen($needle);
+
+        if ($length == 0) {
             return true;
         }
 
@@ -121,44 +142,35 @@ class datalancheTestSequence
         return !is_null($r);
     }
 
-    public function scrobbleTestAuth($json, $relevant_parameters)
+    public function scrobbleTestAuth($json, $relevantParameters)
     {
-        //var_dump($json);
-
         for($i = 0; $i < count($json); $i++)
         {
             foreach($json[$i]->tests as $key => $test)
             {
-                //var_dump($test);
-                
                 if($test->parameters->secret === 'valid_secret')
                 {
-                    //echo "\nfound some valid\n";
-                    $test->parameters->secret = $relevant_parameters['secret'];
+                    $test->parameters->secret = $relevantParameters['secret'];
                 }
                 if($test->parameters->key === 'valid_key')
                 {
-                    //echo "\nfound some key\n";
-                    $test->parameters->key = $relevant_parameters['key'];
+                    $test->parameters->key = $relevantParameters['key'];
                 }
                 
             }  
         }
-        //var_dump($json);
-        //exit();
-        return($json);
+
+        return $json;
     }
 
     public function addTests($tests, $json)
     {
-        //$json = scrobbleTestAuth($json, $this->deployed_client_parameters);
+        foreach($json->tests as $indTest) {
 
-        foreach($json->tests as $_test)
-        {
-            array_push($tests, $_test);
+            array_push($tests, $indTest);
         }
 
-        return($tests);
+        return $tests;
     }
 
     public function getRecordsFromFile($filename) 
@@ -198,117 +210,135 @@ class datalancheTestSequence
         return $records;
     }
 
-    public function handleTestResult($test, $datalanche_error, $data)
+    public function handleTestResult($test, $datalancheError, $data)
     {
-        $_result = 'FAIL';
-        $_message = null;
-        $_acutal_results = array (
+
+        $result = 'FAIL';
+        $message = null;
+        $acutalResults = array (
             'status_code' => null,
             'exception' => null,
             'data' => null
             );
 
-        if($datalanche_error != null)
-        {
-            //$message = $datalanche_error['body']['message'];
-            /*
-            if($this->startsWith($message, 'error:') === true)
-            {
-                $message = str_replace('error:', 'Error:', $message);
+        if( ($test->expected->statusCode === $datalancheError['response']['http_status']) 
+            && ($test->expected->exception == $datalancheError['data']['code'])
+        ) {
+            $result = 'PASS';
+            echo $result.":".$test->name."\n";
+
+            echo "EXP HTTP CODE: ".$test->expected->statusCode
+                ." GOT HTTP CODE: ".$datalancheError['response']['http_status']
+                ."\n";
+
+            echo "EXP CONTENT CODE: ".$test->expected->exception
+                ." GOT CONTENT CODE: ".$datalancheError['data']['code']
+                ."\n";
+
+            if( is_string($test->expected->data)
+                && is_string($datalancheError['data']['message'])
+            ) {
+
+                echo "EXP MESSAGE: ".$test->expected->data
+                    ." GOT MESSAGE: ".$datalancheError['data']['message']
+                    ."\n";
             }
-            */
-            //$_acutal_results['status_code'] = $datalanche_error['statusCode'];
-            //$_acutal_results['exception'] = $datalanche_error['body']['code'];
-           // $_acutal_results['data'] = $datalanche_error['message'];
-        }else {
-            /*
-            $_acutal_results['status_code'] = 200;
-            $_acutal_results['data'] = $data;
-            */
-        }
-       // echo "----------------------------------------\n";
-        //echo "EXPECTED: ".$test['expected']['statusCode']."\n";
-        //echo "ACTUAL: ".$datalanche_error['statusCode']."\n";
-        //echo "TEST INFO:\n";
-        //var_dump($test['expected']);
 
-        if($test->expected->statusCode === $datalanche_error['statusCode'])
-        {
-            //echo "----------------------------------------\n";
-            $_result = 'PASS';
-            echo $_result.":".$test->name."\n";
-            echo "EXPECTED: ".$test->expected->statusCode." RECEIVED: ".$datalanche_error['statusCode']."\n";
-
-            //var_dump($test['parameters']);
             echo "----------------------------------------\n";
-            return(true);
-        }else
-        {
-            //echo "----------------------------------------\n";
-            echo $_result.":".$test->name."\n";
-            echo "EXPECTED: ".$test->expected->statusCode." RECEIVED: ".$datalanche_error['statusCode']."\n";
-            //echo $client->getClientSecret()."\n";
-            //echo $client->getClientKey()."\n";
+
+            return true;
+
+        } else {
+
+            echo $result.":".$test->name."\n";
+
+            echo "EXP HTTP CODE: ".$test->expected->statusCode
+                ." GOT HTTP CODE: ".$datalancheError['response']['http_status']
+                ."\n";
+
+            echo "EXP CONTENT CODE: ".$test->expected->exception
+                ." GOT CONTENT CODE: ".$datalancheError['data']['code']
+                ."\n";
+
+            if( is_string($test->expected->data) 
+                && is_string($datalancheError['data']['message'])
+            ) {
+
+                echo "EXP MESSAGE: ".$test->expected->data
+                    ." GOT MESSAGE: ".$datalancheError['data']['message']
+                    ."\n";
+            }
+
+            echo "||||||||||||||TEST CONTENTS||||||||||||||||||\n";
+
             var_dump($test);
-            //var_dump(debug_backtrace());
+
+            echo "||||||||||||||||||END END||||||||||||||||||||\n";
+
             echo "----------------------------------------\n";
-            if($test->name === "insert_into: values = one full row" || $test->name === "drop_table: table_name = array")
-            {
-                echo "We Found our test";
+
+            if( ($test->name === "insert_into: values = one full row")
+                || ($test->name === "drop_table: table_name = array")
+                || ($test->name === "get_table_info: table_name = array")
+            ) {
+
+                echo "--------------\n";
+                echo "THIS TEST HAS BEEN DEEMED TEMPORARILY ACCEPTABLE TO FAIL, PRESS ENTER TO CONTINUE..";
                 $line = fgets(STDIN);
-            }else {
+                unset($line);
+
+            } else {
+
+                echo "UNEXPECTED TEST FAILURE HAS BEEN DETECTED, EXITING...\n";
                 exit();
             }
-            return(false);
+
+            return false;
         }
-        //debug_print_backtrace();
-         //echo "///////////////////////////////\n";
     }
 
     //ask what is up with this func
     public function useRawQuery($keys, $params)
     {
-        //var_dump($keys);
-        //var_dump($params);
+
         $use_raw = false;
-        foreach($params as $key => $param)
-        {
-            if(in_array($key, $keys) === false)
-            {
-                echo "using raw!\n";
+
+        foreach($params as $key => $param) {
+
+            if( in_array($key, $keys) === false ) {
+
+                echo "\nRAW QUERY BEING USED\n";
                 echo "UNKNOWN VALUE: ";
                 echo "[".$key."]\n";
                 $use_raw = true;
                 break;
             }
         }
-        return($use_raw);
+        return $use_raw;
     }
 
     //  WHAT IS $URL SUPPOSED TO BE? FULL URL?
 
-    public function queryRaw($client, $test, $type, $url, $body)
-    {
+    public function queryRaw($client, $test, $type, $url, $body) {
+
         $results = null;
         $pass = false;
-        $authString = $client->getClientKey().":".$client->getClientSecret();
-        //echo "\n--------------------------------------------------\n";
-        echo "QUERY RAW INITIALIZED\n";
-        //echo "\n--------------------------------------------------\n";
+        $authString = $client->getKey().":".$client->getSecret();
+        $completeInfoArray = get_object_vars($test->parameters);
+        $completeInfoArray['method'] = $type;
+        $completeInfoArray['post_request_body'] = null;
 
-
-        if($type === 'del')
-        {
+        if($type === 'del') {
             //delete get request
             $requestUrl = $client->getClientUrl().$url.$this->httpAssocEncode($body);
             $curlHandle = $this->rawCurlCreator();
             curl_setopt($curlHandle, CURLOPT_CUSTOMREQUEST, 'DELETE');
             curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
             curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
-            $results = $client->handleResults($curlHandle);
+            $results = $client->handleResults($curlHandle, $completeInfoArray);
             $results = $this->handleTestResult($test, $results, $body);
 
-            return($results); 
+            return $results; 
 
         } elseif ($type === 'get') {
             //get request
@@ -316,23 +346,16 @@ class datalancheTestSequence
             $curlHandle = $this->rawCurlCreator();
             curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
             curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
-            $results = $client->handleResults($curlHandle);
+            $results = $client->handleResults($curlHandle, $completeInfoArray);
             $results = $this->handleTestResult($test, $results, $body);
 
-            return($results);
+            return $results;
 
         } elseif ($type === 'post') {
-            //echo "WE ARE IN POST!!\n";
+            //post request
+            $completeInfoArray['post_request_body'] = $body;
             $requestUrl = $client->getClientUrl().$url;
             $curlHandle = $this->rawCurlCreator();
-
-            echo "|BODY:____________________\n";
-            //$body = json_encode($body);
-            //$body = (string) json_encode($body);
-            echo "\n";
-            //echo gettype($body)."\n";
-            //var_dump($body);
-            echo json_encode($body)."\n";
 
             if(is_array($body) && count($body) === 0)
             {
@@ -346,31 +369,26 @@ class datalancheTestSequence
                     $body = json_encode($body, JSON_NUMERIC_CHECK);
                 }
             }
-            echo "|||||||||||||||||||||||||\n";
             
             curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
-            //curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type application/json', 'Content-Length: '.strlen($body)));
-            //curl_setopt($curlHandle, CURLOPT_POST, true);
+            curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type application/json', 'Content-Length: '.strlen($body)));
+            curl_setopt($curlHandle, CURLOPT_POST, true);
             curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $body);
             curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
-            
-            
-
-
-
             curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
+
             $results = $client->handleResults($curlHandle);
             $results = $this->handleTestResult($test, $results, $body);
 
-            return($results);
+            return $results;
         }
     }
 
     public function alterTable($test, $client)
     {
-        $_results = null;
+        $results = null;
         $params = $test->parameters;
-        $keys = array(
+        $keys = array (
             'table_name',
             'rename',
             'description',
@@ -384,93 +402,117 @@ class datalancheTestSequence
             'secret'
             );
 
-        $use_raw = $this->useRawQuery($keys, $params);
+        $useRaw = $this->useRawQuery($keys, $params);
 
-        if($use_raw === true)
+        if( ($useRaw === true) )
         {
-            unset($params->key); unset($params->secret);
-            $_results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
-            return($_results);
-        }else 
-        {
+            unset($params->key); 
+            unset($params->secret);
+
+            $results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
+
+            return($results);
+
+        } else {
+
             $query = new Query();
-            unset($params->key); unset($params->secret);
-            if(property_exists($params, 'table_name') === true)
-            {
-                //echo "man\n";
+            unset($params->key); 
+            unset($params->secret);
+
+            if( (property_exists($params, 'table_name') === true) ) {
+
                 $query->alterTable($params->table_name);
+
             } else {
-                //echo "fun\n";
+
                 $query->setMethod('post');
                 $query->setBaseUrl('/alter_table');
             }
-            if(property_exists($params, 'rename'))
-            {
+
+            if(property_exists($params, 'rename')) {
+
                 $query->rename($params->rename);
-            }
-            elseif(property_exists($params, 'description'))
-            {
+
+            } elseif (property_exists($params, 'description')) {
+
                 $query->description($params->description);
-            }
-            elseif(property_exists($params, 'is_private'))
-            {
+
+            } elseif (property_exists($params, 'is_private')) {
+
                 $query->isPrivate($params->is_private);
-            }
-            elseif(property_exists($params, 'license'))
-            {
+
+            } elseif (property_exists($params, 'license')) {
+
                 $query->license($params->license);
-            }
-            elseif(property_exists($params, 'sources'))
-            {
+
+            } elseif (property_exists($params, 'sources')) {
+
                 $query->sources($params->sources);
             }
-            if(property_exists($params, 'add_columns') && is_array($params->add_columns) === true)
-            {
-                for($i = 0; $i < count($params->add_columns); $i++)
-                {
+
+            if( (property_exists($params, 'add_columns'))
+                && (is_array($params->add_columns) === true)
+            ) {
+
+                for($i = 0; $i < count($params->add_columns); $i++) {
+
                     $query->addColumn($params->add_columns[$i]);
                 }
-            } elseif(property_exists($params, 'add_columns')) {
-                $_results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
-                return($_results);
+
+            } elseif ( (property_exists($params, 'add_columns')) ) {
+
+                $results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
+
+                return $results;
             }
-            if(property_exists($params, 'drop_columns') && is_array($params->drop_columns) === true)
-            {
-                for($i = 0; $i < count($params->drop_columns); $i++)
-                {
+
+            if( (property_exists($params, 'drop_columns')) 
+                && (is_array($params->drop_columns) === true) 
+            ) {
+
+                for($i = 0; $i < count($params->drop_columns); $i++) {
+
                     $query->dropColumn($params->drop_columns[$i]);
                 }
-            }elseif(property_exists($params, 'drop_columns')) {
-                $_results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
-                return($_results);
+
+            } elseif(property_exists($params, 'drop_columns')) {
+
+                $results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
+
+                return $results;
             }
 
-            if(property_exists($params, 'alter_columns') && is_object($params->alter_columns) === true && count(get_object_vars($params)) > 0)
-            {
-                foreach($params->alter_columns as $key => $value)
-                {
+            if( (property_exists($params, 'alter_columns')) 
+                && (is_object($params->alter_columns) === true) 
+                && (count(get_object_vars($params)) > 0)
+            ) {
+
+                foreach($params->alter_columns as $key => $value) {
+
                     $query->alterColumn($key, $value);
                 }
-            } elseif(property_exists($params, 'alter_columns')) {
-                $_results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
-                return($_results);
+
+            } elseif( (property_exists($params, 'alter_columns')) ) {
+
+                $results = $this->queryRaw($client, $test, 'post', '/alter_table', $params);
+
+                return $results;
             }
-            $_results = $client->query($query);
-            $_results = $this->handleTestResult($test, $_results, $params);
 
-            return($_results);
+            $results = $client->query($query);
+            $results = $this->handleTestResult($test, $results, $params);
+
+            return $results;
         }
-
-        //implement unset for params before passing
     }
 
     public function createTable($test, $client)
     {
-        echo "we are in create_table\n";
+
         $params = $test->parameters;
-        $use_raw = null;
-        $_results = null;
-        $_query = null;
+        $useRaw = null;
+        $results = null;
+        $query = null;
         $keys = array(
             'table_name',
             'description',
@@ -482,287 +524,353 @@ class datalancheTestSequence
             'secret'
             );
 
-        $use_raw = $this->useRawQuery($keys, $params);
+        $useRaw = $this->useRawQuery($keys, $params);
         //echo $use_raw."\n";
         //exit();
 
-        if($use_raw === true)
-        {
-            echo "RAW CREATE\n";
-            unset($params->key); unset($params->secret);
-            $_results = $this->queryRaw($client, $test, 'post', '/create_table', $params);
-            return($_results);
-        } else
-        {
-            echo ("GOOD\n");
+        if($useRaw === true) {
 
-            $_query = new Query();
-            unset($params->key); unset($params->secret);
-            if(isset($params->table_name))
-            {
-                $_query->createTable($params->table_name);
+            unset($params->key); 
+            unset($params->secret);
+
+            $results = $this->queryRaw($client, $test, 'post', '/create_table', $params);
+
+            return $results;
+
+        } else {
+
+            $query = new Query();
+            unset($params->key); 
+            unset($params->secret);
+
+            if( (isset($params->table_name)) ) {
+
+                $query->createTable($params->table_name);
+
             }else{
-                if(property_exists($params, 'table_name'))
-                {
-                    echo "\nBALLLS!!\n";
-                    $_query->createTable($params->table_name);
+
+                if( (property_exists($params, 'table_name')) ) {
+
+                    $query->createTable($params->table_name);
+
                 } else {
-                    $_query->setMethod('post');
-                    $_query->setBaseUrl('/create_table');
+
+                    $query->setMethod('post');
+                    $query->setBaseUrl('/create_table');
                 }
             }
-            if(property_exists($params, 'description'))
-            {
-                $_query->description($params->description);
-            }
-            if(property_exists($params, 'is_private'))
-            {  
-                $_query->isPrivate($params->is_private);
-            }
-            if(property_exists($params, 'license'))
-            {
-                $_query->license($params->license);
-            }
-            if(property_exists($params, 'sources'))
-            {
-                $_query->sources($params->sources);
-            }
-            if(property_exists($params, 'columns'))
-            {
-                $_query->columns($params->columns);
-            }
-            //echo "create table\n";
-            //var_dump($_query);
-            echo "test\n";
-            $_results = $client->query($_query);
-            $_results = $this->handleTestResult($test, $_results, $params);
 
-            return($_results);
+            if( (property_exists($params, 'description')) ) {
+
+                $query->description($params->description);
+            }
+
+            if( (property_exists($params, 'is_private')) ) {
+
+                $query->isPrivate($params->is_private);
+            }
+
+            if( (property_exists($params, 'license')) ) {
+
+                $query->license($params->license);
+            }
+
+            if( (property_exists($params, 'sources')) ) {
+
+                $query->sources($params->sources);
+            }
+
+            if( (property_exists($params, 'columns')) ) {
+
+                $query->columns($params->columns);
+            }
+            
+            $results = $client->query($query);
+            $results = $this->handleTestResult($test, $results, $params);
+
+            return $results;
         }
     }
 
     public function dropTable($test, $client)
     {
-        $use_raw = null;
-        $_results = null;
-        $_query = null;
+        $useRaw = null;
+        $results = null;
+        $query = null;
         $params = $test->parameters;
         $keys = array( 'table_name', 'key', 'secret' );
 
-        $use_raw = $this->useRawQuery($keys, $params);
+        $useRaw = $this->useRawQuery($keys, $params);
 
-        if($use_raw === true)
-        {
-            unset($params->key); unset($params->secret);
-            $_results = $this->queryRaw($client, $test, 'del', '/drop_table', $params);
-            return($_results);
-        } else
-        {
-            $_query = new Query();
-            unset($params->key); unset($params->secret);
-            if(property_exists($params, 'table_name'))
-            {
-                if(is_bool($params->table_name))
-                {
-                    if($params->table_name === true)
-                    {
+        if( ($useRaw === true) ) {
+
+            unset($params->key); 
+            unset($params->secret);
+
+            $results = $this->queryRaw($client, $test, 'del', '/drop_table', $params);
+
+            return $results;
+
+        } else {
+
+            $query = new Query();
+
+            unset($params->key); 
+            unset($params->secret);
+
+            if( (property_exists($params, 'table_name')) ) {
+
+                if( (is_bool($params->table_name)) ) {
+
+                    if( ($params->table_name === true) ) {
+
                         $params->table_name = "true";
-                    } elseif ($params->table_name === false) {
+
+                    } elseif ( ($params->table_name === false) ) {
+
                         $params->table_name = "false";
                     }
                 }
-                $_query->dropTable($params->table_name);
+
+                $query->dropTable($params->table_name);
+
             } else {
-                $_query->setMethod('post');
-                $_query->setBaseUrl('/drop_table');
-                $_results = $this->queryRaw($client, $test, 'del', '/drop_table', $params);
-                return($_results);
+
+                $query->setMethod('post');
+                $query->setBaseUrl('/drop_table');
+                $results = $this->queryRaw($client, $test, 'del', '/drop_table', $params);
+
+                return $results;
             }
-            $_results = $client->query($_query);
-            $_results = $this->handleTestResult($test, $_results, $params);
-            return($_results);
+
+            $results = $client->query($query);
+            $results = $this->handleTestResult($test, $results, $params);
+
+            return $results;
         }
     }
 
     public function deleteFrom($test, $client)
     {
-        $_results = null;
-        $_query = null;
-        $use_raw = null;
+        $results = null;
+        $query = null;
+        $useRaw = null;
         $params = $test->parameters;
         $keys = array( 'table_name', 'where', 'key', 'secret' );
 
-        $use_raw = $this->useRawQuery($keys, $params);
+        $useRaw = $this->useRawQuery($keys, $params);
 
-        if($use_raw === true)
-        {
-            unset($params->key); unset($params->secret);
-            $_results = $this->queryRaw($client, $test, 'post', '/delete_from', $params);
-            return($_results);
-        } else
-        {
-            $_query = new Query();
-            if(property_exists($params, 'table_name'))
-            {
-                $_query->deleteFrom($params->table_name);
+        if($useRaw === true) {
+
+            unset($params->key); 
+            unset($params->secret);
+
+            $results = $this->queryRaw($client, $test, 'post', '/delete_from', $params);
+
+            return $results;
+
+        } else {
+
+            $query = new Query();
+
+            if( (property_exists($params, 'table_name')) ) {
+
+                $query->deleteFrom($params->table_name);
+
             }else {
-                $_query->setMethod('post');
-                $_query->setBaseUrl('/delete_from');
-                $_results = $this->queryRaw($client, $test, 'post', '/delete_from', $params);
-                return($_results);
+
+                $query->setMethod('post');
+                $query->setBaseUrl('/delete_from');
+                $results = $this->queryRaw($client, $test, 'post', '/delete_from', $params);
+
+                return $results;
             }
-            if(property_exists($params, 'where'))
-            {
-                $_query->deleteFrom($params->table_name)->where($params->where);
+
+            if(property_exists($params, 'where')) {
+
+                $query->deleteFrom($params->table_name)->where($params->where);
             }
-            echo "this should be it\n";
+            //echo "this should be it\n";
             //var_dump($params['where']);
-            $_results = $client->query($_query);
-            $_results = $this->handleTestResult($test, $_results, $params);
-            return($_results);
+            $results = $client->query($query);
+            $results = $this->handleTestResult($test, $results, $params);
+
+            return $results;
         }
     }
 
     public function getTableList($test, $client)
     {
-        $_results = null;
-        $_query = null;
-        $use_raw = null;
+        $results = null;
+        $query = null;
+        $useRaw = null;
         $params = $test->parameters;
         $keys = array('key', 'secret');
 
-        $use_raw = $this->useRawQuery($keys, $params);
+        $useRaw = $this->useRawQuery($keys, $params);
 
-        if($use_raw === true)
-        {
-            unset($params->key); unset($params->secret);
-            echo "QUERY RAW QUERY RAW\n";
-            $_results = $this->queryRaw($client, $test, 'get', '/get_table_list', $params);
-            return($_results);
-        } else
-        {       if($test->expected === 200)
-                {       
-                    $_query = new Query();
-                }else {
-                    $_query= new Query();
+        if( ($useRaw === true) ) {
+
+            unset($params->key); 
+            unset($params->secret);
+
+            $results = $this->queryRaw($client, $test, 'get', '/get_table_list', $params);
+
+            return $results;
+
+        } else {       
+
+            if($test->expected === 200) { 
+
+                $query = new Query();
+
+            } else {
+
+                    $query= new Query();
                 }
-                unset($params->key); unset($params->secret);
-                $_query->getTableList();
-                $_results = $client->query($_query);
+
+                unset($params->key); 
+                unset($params->secret);
+                $query->getTableList();
+                $results = $client->query($query);
             
             
-            $_results = $this->handleTestResult($test, $_results, $params);
-            return($_results);
+            $results = $this->handleTestResult($test, $results, $params);
+
+            return $results;
         }
     }
 
     public function getTableInfo($test, $client)
     {
-        $_query = null;
-        $_results = null;
-        $use_raw = null;
+        $query = null;
+        $results = null;
+        $useRaw = null;
         $params = $test->parameters;
         $keys = array( 'table_name', 'key', 'secret' );
 
-        $use_raw = $this->useRawQuery($keys, $params);
+        $useRaw = $this->useRawQuery($keys, $params);
         
-        if($use_raw === true)
+        if($useRaw === true)
         {
-            unset($params->key); unset($params->secret);
-            $_results = $this->queryRaw($client, $test, 'get', '/get_table_info', $params);
-            return($_results);
-        } else
-        {
-            $_query = new Query();
-            unset($params->key); unset($params->secret);
-            if(property_exists($params, 'table_name') === true)
-            {
-                if($params->table_name === null)
-                {
-                    echo "SPECIAL FOUND\n";
-                    $_results = $this->queryRaw($client, $test, 'get', '/get_table_info', $params);
-                    return($_results);
-                }else{
-                    if(is_bool($params->table_name))
-                    {
-                        if($params->table_name === true)
-                        {
+            unset($params->key); 
+            unset($params->secret);
+            $results = $this->queryRaw($client, $test, 'get', '/get_table_info', $params);
+
+            return $results;
+        } else {
+
+            $query = new Query();
+            unset($params->key); 
+            unset($params->secret);
+
+            if( (property_exists($params, 'table_name') === true) ) {
+
+                if($params->table_name === null) {
+
+                    $results = $this->queryRaw($client, $test, 'get', '/get_table_info', $params);
+
+                    return $results;
+
+                } else {
+
+                    if(is_bool($params->table_name)) {
+
+                        if($params->table_name === true) {
+
                             $params->table_name = "true";
+
                         }elseif($params->table_name === false) {
+
                             $params->table_name = "false";
                         } 
                     }
-                    $_query->getTableInfo($params->table_name);
+
+                    $query->getTableInfo($params->table_name);
                 }
             } else {
-                $_results = $this->queryRaw($client, $test, 'get', '/get_table_info', $params);
-                return($_results);
+
+                $results = $this->queryRaw($client, $test, 'get', '/get_table_info', $params);
+
+                return $results;
             }
-            $_results = $client->query($_query);
-            $_results = $this->handleTestResult($test, $_results, $params);
-            return($_results);
+
+            $results = $client->query($query);
+            $results = $this->handleTestResult($test, $results, $params);
+
+            return $results;
         }
     }
 
     public function insertInto($test, $client)
     {
-        $_results = null;
-        $_path = null;
-        $_query = null;
-        $_rows = null;
-        $use_raw = null;
+        $results = null;
+        $path = null;
+        $query = null;
+        $rows = null;
+        $useRaw = null;
         $params = $test->parameters;
         $keys = array( 'table_name', 'values', 'key', 'secret' );
 
-        $use_raw = $this->useRawQuery($keys, $params);
+        $useRaw = $this->useRawQuery($keys, $params);
 
-        if($use_raw === true)
-        {
-            unset($params->key); unset($params->secret);
-            $_results = $this->queryRaw($client, $test, 'post', '/insert_into', $params);
-            return($_results);
-        }else
-        {
-            $_query = new Query();
-            unset($params->key); unset($params->secret);
-            if(property_exists($params, 'table_name'))
-            {
-                echo "found property\n";
-                $_query->insertInto($params->table_name);
-            }else {
-                $_query->setMethod('post');
-                $_query->setBaseUrl('/insert_into');
-                $_results = $this->queryRaw($client, $test, 'post', '/insert_into', $params);
-                return($_results);
+        if($useRaw === true) {
+
+            unset($params->key); 
+            unset($params->secret);
+            $results = $this->queryRaw($client, $test, 'post', '/insert_into', $params);
+
+            return $results;
+
+        }else {
+
+            $query = new Query();
+            unset($params->key); 
+            unset($params->secret);
+
+            if(property_exists($params, 'table_name')) {
+
+                $query->insertInto($params->table_name);
+
+            } else {
+
+                $query->setMethod('post');
+                $query->setBaseUrl('/insert_into');
+                $results = $this->queryRaw($client, $test, 'post', '/insert_into', $params);
+
+                return $results;
             }
 
-            if($params->values === 'dataset_file')
-            {
-                //var_dump($test);
-                $_path = realpath("../../api-server/tests/".$test->dataset_file);
-                $_rows = $this->getRecordsFromFile($_path);
-                $_query->values($_rows);
-                $_results = $client->query($_query);
-                $_results = $this->handleTestResult($test, $_results, $params);
-                return($_results);
-            }else
-            {
-                if(property_exists($params, 'values'))
-                {
-                    $_query->values($params->values);
+            if($params->values === 'dataset_file') {
+
+                $path = realpath("../../api-server/tests/".$test->dataset_file);
+                $rows = $this->getRecordsFromFile($path);
+                $query->values($rows);
+                $results = $client->query($query);
+                $results = $this->handleTestResult($test, $results, $params);
+
+                return $results;
+
+            } else {
+
+                if(property_exists($params, 'values')) {
+
+                    $query->values($params->values);
                 }
-                $_results = $client->query($_query);
-                $_results = $this->handleTestResult($test, $_results, $params);
-                return($_results);
+
+                $results = $client->query($query);
+                $results = $this->handleTestResult($test, $results, $params);
+
+                return $results;
             }
         }
     }
 
     public function selectFrom($test, $client)
     {
-        $use_raw = null;
-        $_results = null;
-        $_query = null;
+        $useRaw = null;
+        $results = null;
+        $query = null;
         $params = $test->parameters;
         $keys = array(
             'select',
@@ -779,174 +887,196 @@ class datalancheTestSequence
             'table_name'
             );
 
-        $use_raw = $this->useRawQuery($keys, $params);
+        $useRaw = $this->useRawQuery($keys, $params);
 
-        if($use_raw === true)
+        if($useRaw === true)
         {
-            unset($params->key); unset($params->secret);
-            $_results = $this->queryRaw($client, $test, 'post', '/select_from', $params);
-            return($_results);
-        }else
-        {
-            $_query = new Query();
-            unset($params->key); unset($params->secret);
-            if(property_exists($params, 'select'))
-            {
-                $_query->select($params->select);
+            unset($params->key); 
+            unset($params->secret);
+
+            $results = $this->queryRaw($client, $test, 'post', '/select_from', $params);
+
+            return $results;
+
+        }else {
+            $query = new Query();
+            unset($params->key); 
+            unset($params->secret);
+
+            if(property_exists($params, 'select')) {
+
+                $query->select($params->select);
+
             } else {
-                $_query->setMethod('post');
-                $_query->setBaseUrl('/select_from');
-                $_results = $this->queryRaw($client, $test, 'post', '/select_from', $params);
-                return($_results);
-            }
-            if(property_exists($params, 'distinct'))
-            {
-                $_query->distinct($params->distinct);
-            }
-            if(property_exists($params, 'from'))
-            {
-                $_query->from($params->from);
-            }
-            if(property_exists($params, 'where'))
-            {
-                $_query->where($params->where);
-            }
-            //echo "this should be it\n";
-            //var_dump($params['where']);;
-            if(property_exists($params, 'group_by'))
-            {
-                $_query->groupBy($params->group_by);
-            }
-            if(property_exists($params, 'order_by'))
-            {
-                $_query->orderBy($params->order_by);
-            }
-            if(property_exists($params, 'offset'))
-            {
-                $_query->offset($params->offset);
-            }
-            if(property_exists($params, 'limit'))
-            {
-                $_query->limit($params->limit);
-            }
-            if(property_exists($params, 'total'))
-            {
-                $_query->total($params->total);
+
+                $query->setMethod('post');
+                $query->setBaseUrl('/select_from');
+                $results = $this->queryRaw($client, $test, 'post', '/select_from', $params);
+                return $results;
             }
 
-            $_results = $client->query($_query);
-            $_results = $this->handleTestResult($test, $_results, $params);
-            return($_results);
+            if ( (property_exists($params, 'distinct')) ) {
+
+                $query->distinct($params->distinct);
+            }
+
+            if ( (property_exists($params, 'from')) ) {
+
+                $query->from($params->from);
+            }
+
+            if ( (property_exists($params, 'where')) ) {
+
+                $query->where($params->where);
+            }
+
+            if ( (property_exists($params, 'group_by')) ) {
+
+                $query->groupBy($params->group_by);
+            }
+
+            if ( (property_exists($params, 'order_by')) ) {
+
+                $query->orderBy($params->order_by);
+            }
+
+            if ( (property_exists($params, 'offset')) ) {
+
+                $query->offset($params->offset);
+            }
+
+            if ( (property_exists($params, 'limit')) ) {
+
+                $query->limit($params->limit);
+            }
+
+            if ( (property_exists($params, 'total')) ) {
+
+                $query->total($params->total);
+            }
+
+            $results = $client->query($query);
+            $results = $this->handleTestResult($test, $results, $params);
+            
+            return $results;
         }
     }
 
     public function update($test, $client)
     {
-        $use_raw = null;
-        $_results = null;
-        $_query = null;
+        $useRaw = null;
+        $results = null;
+        $query = null;
         $params = $test->parameters;
         $keys = array ('table_name', 'set', 'where', 'key', 'secret');
 
-        $use_raw = $this->useRawQuery($keys, $params);
+        $useRaw = $this->useRawQuery($keys, $params);
 
-        if($use_raw === true)
+        if($useRaw === true)
         {
-            unset($params->key); unset($params->secret);
-            $_results = $this->queryRaw($client, $test, 'post', '/update', $params);
-            return($_results);
-        }else
-        {
-            $_query = new Query();
-            if(property_exists($params, 'table_name'))
-            {
-                $_query->update($params->table_name);
+            unset($params->key); 
+            unset($params->secret);
+            $results = $this->queryRaw($client, $test, 'post', '/update', $params);
+
+            return $results;
+
+        } else {
+
+            $query = new Query();
+
+            if(property_exists($params, 'table_name')) {
+
+                $query->update($params->table_name);
+
             } else {
-                $_query->setMethod('post');
-                $_query->setBaseUrl('/update');
-                $_results = $this->queryRaw($client, $test, 'post', '/update', $params);
-                return($_results);
+
+                $query->setMethod('post');
+                $query->setBaseUrl('/update');
+                $results = $this->queryRaw($client, $test, 'post', '/update', $params);
+
+                return $results;
             }
-            if(property_exists($params, 'set'))
-            {
-                $_query->set($params->set);
+
+            if(property_exists($params, 'set')) {
+
+                $query->set($params->set);
             }
-            if(property_exists($params, 'where'))
-            {
-                $_query->where($params->where);
+            
+            if(property_exists($params, 'where')) {
+
+                $query->where($params->where);
             }
-            echo "this should be it:\n";
-            //var_dump($params['where']);
-            $_results = $client->query($_query);
-            $_results = $this->handleTestResult($test, $_results, $params);
-            return($_results);
+
+            $results = $client->query($query);
+            $results = $this->handleTestResult($test, $results, $params);
+            return $results;
         }
     }
 
     public function execute($test, $client)
     {
-        $_results = null;
+        $results = null;
+
         $compare = (string) $test->method;
 
-        if($compare === 'alter_table')
-        {
-            $_results = $this->alterTable($test, $client);
-        }
-        if($compare === 'create_table')
-        {
-            $_results = $this->createTable($test, $client);
-        }
-        if($compare === 'delete_from')
-        {
-            $_results = $this->deleteFrom($test, $client);
-        }
-        if($compare === 'drop_table')
-        {
-            $_results = $this->dropTable($test, $client);
-        }
-        if($compare === 'get_table_info')
-        {
-            echo "in get info\n";
-            $_results = $this->getTableInfo($test, $client);
-        }
-        if($compare === 'get_table_list')
-        {
-             echo "in get info\n";
-            $_results = $this->getTableList($test, $client);
-        }
-        if($compare === 'insert_into')
-        {
-            $_results = $this->insertInto($test, $client);
-        }
-        if($compare === 'select_from')
-        {
-            $_results = $this->selectFrom($test, $client);
-        }
-        if($compare === 'update')
-        {
-            $_results = $this->update($test, $client);
-        }
+        if($compare === 'alter_table') {
 
-        if($_results === null)
-        {
+            $results = $this->alterTable($test, $client);
+
+        } elseif ($compare === 'create_table') {
+
+            $results = $this->createTable($test, $client);
+
+        } elseif($compare === 'delete_from') {
+
+            $results = $this->deleteFrom($test, $client);
+
+        } elseif($compare === 'drop_table') {
+
+            $results = $this->dropTable($test, $client);
+
+        } elseif($compare === 'get_table_info') {
+
+            $results = $this->getTableInfo($test, $client);
+
+        } elseif($compare === 'get_table_list') {
+
+            $results = $this->getTableList($test, $client);
+
+        } elseif($compare === 'insert_into') {
+
+            $results = $this->insertInto($test, $client);
+
+        } elseif($compare === 'select_from') {
+
+            $results = $this->selectFrom($test, $client);
+
+        } elseif($compare === 'update') {
+
+            $results = $this->update($test, $client);
+
+        } else {
+
             var_dump($test);
-            echo $compare."\n";
+            echo "PERSCRIBED TEST METHOD: ".$compare."\n";
             throw new Exception("datalancheTestSequence->execute() has reported being out of focus. [FATAL]\n");
             exit();
         }
 
-        return($_results);
+        return $results;
     }
 
     public function cleanSets($client)
     {
-        $_query = new Query();
-        try
-        {
-            $client->query($_query->dropTable('test_dataset'));
-            $client->query($_query->dropTable('new_test_dataset'));
-            $client->query($_query->dropTable('45'));
-        }catch(Exception $e){
+        $query = new Query();
+
+        try {
+
+            $client->query($query->dropTable('test_dataset'));
+            $client->query($query->dropTable('new_test_dataset'));
+            $client->query($query->dropTable('45'));
+
+        } catch(Exception $e) {
             echo $e."\n";
         }
     }
@@ -954,26 +1084,32 @@ class datalancheTestSequence
     public function adventSequence()
     {
         $tests = array();
-        $_file = null;
-        $ex_param = array(
+        $file = null;
+
+        $exParam = array(
             'key' => $this->deployed_client_parameters['key'],
             'secret' => $this->deployed_client_parameters['secret']
             );
-        $_json = null;
-        $_results = null;
-        $number_tests_passed = null;
-        $_dataset_path = $this->deployed_client_parameters['test_dataset_path'];
-        $contents = json_decode(file_get_contents($_dataset_path), true);
-        $root_dir = realpath(dirname($_dataset_path));
-        $sub_test_path = $root_dir.'/'.$contents['dataset_file'];
 
-        for($i = 0; $i < count($contents['suites'][$this->deployed_client_parameters['test_suite']]); $i++)
-        {
-            $_file = $root_dir.'/'.$contents['suites']['all'][$i];
-            //echo $_file."\n";
-            $_json = json_decode(file_get_contents($_file));
-            array_push($tests, $_json);
-            //var_dump($_json);
+        $json = null;
+        $results = null;
+        $numberTestsPassed = null;
+        $datasetPath = $this->deployed_client_parameters['test_dataset_path'];
+        $chosenSuite = $this->deployed_client_parameters['test_suite'];
+
+        $contents = json_decode(file_get_contents($datasetPath), true);
+
+        $rootDir = realpath(dirname($datasetPath));
+
+        $subTestPath = $rootDir.'/'.$contents['dataset_file'];
+
+        for($i = 0; $i < count($contents['suites'][$chosenSuite]); $i++) {
+
+            $file = $rootDir.'/'.$contents['suites'][$chosenSuite][$i];
+
+            $json = json_decode(file_get_contents($file));
+
+            array_push($tests, $json);
         }
 
         $client = new Client($this->deployed_client_parameters['secret'],
@@ -983,22 +1119,27 @@ class datalancheTestSequence
                              $this->deployed_client_parameters['ssl']);
 
         $this->cleanSets($client);
-        $tests = $this->scrobbleTestAuth($tests, $ex_param);
 
-        for($i = 0; $i < count($tests); $i++)
-        {
-            foreach($tests[$i]->tests as $key => $test)
-            {
-                $client->setClientKey($test->parameters->key);
-                $client->setClientSecret($test->parameters->secret);
-                $_results = $this->execute($test, $client);
-                if($_results)
+        $tests = $this->scrobbleTestAuth($tests, $exParam);
+
+        for($i = 0; $i < count($tests); $i++) {
+
+            foreach($tests[$i]->tests as $key => $test) {
+
+                $client->setKey($test->parameters->key);
+                $client->setSecret($test->parameters->secret);
+                $results = $this->execute($test, $client);
+
+                if($results)
                 {
-                    $number_tests_passed++;
+                    $numberTestsPassed++;
                 }
             }
         }
-        echo "\n------\n".$number_tests_passed."\n------\n";
+        echo "\n------\n # of tests reporting success: "
+            .$numberTestsPassed
+            ."\n------\n";
+
         exit();
 
     }
