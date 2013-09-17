@@ -90,7 +90,7 @@ class Client
         return $this;
     }
 
-    public function httpAssocEncode($array)
+    private function httpAssocEncode($array)
     {
         $requestOption = '?';
         $end = end($array);
@@ -115,7 +115,7 @@ class Client
         return $requestOption;
     }
 
-    public function curlCreator()
+    private function curlCreator()
     {
         $options = array (
             CURLOPT_HEADER => true,
@@ -138,7 +138,7 @@ class Client
         return $curlHandle;
     }
 
-    public function resultsMediator($serverResponseString, $curlInfoArray)
+    private function resultsMediator($serverResponseString, $curlInfoArray)
     {
         //var_dump($serverResponseString);
         //var_dump($curlInfoArray);
@@ -205,7 +205,7 @@ class Client
         return $statusArray;
     }
 
-    public function getBody($query)
+    private function getBody($query)
     {
         
         $queryParameters = $query->getParameters();
@@ -396,7 +396,7 @@ class Client
         return $postRequestBody;
     }
 
-    public function getUrl($query)
+    private function getUrl($query)
     {
         if($query === null) {
 
@@ -479,7 +479,7 @@ class Client
         return $results;
     }
 
-    public function clientPost($query)
+    private function clientPost($query)
     {
         $key = $this->_key;
         $secret = $this->_secret;
@@ -501,7 +501,7 @@ class Client
         return $results;
     }
 
-    public function clientGet($query)
+    private function clientGet($query)
     {
         $key = $this->_key;
         $secret = $this->_secret;
@@ -520,7 +520,7 @@ class Client
         return $results;
     }
 
-    public function clientDelete($query)
+    private function clientDelete($query)
     {
         $key = $this->_key;
         $secret = $this->_secret;
@@ -540,7 +540,7 @@ class Client
         return $results;
     }
 
-    public function handleResults($curlHandle)
+    private function handleResults($curlHandle)
     {
         //handle results gets curl handle, executes it, and
         //then returns pertinant results about the interaction
@@ -603,7 +603,7 @@ class Client
         }
     }
 
-    public function isNotNull($mixedVar)
+    private function isNotNull($mixedVar)
     {
         return !is_null($mixedVar);
     }
@@ -623,7 +623,7 @@ class Client
         return $this->_url;
     }
 
-    public function getDebugInfo($curlInfo, $curlExecResult)
+    private function getDebugInfo($curlInfo, $curlExecResult)
     {
         $curlExecResultArray = $this->resultsMediator($curlExecResult, $curlInfo);
         
