@@ -92,7 +92,7 @@ class Client
 
     private function httpAssocEncode($array)
     {
-        $requestOption = '?';
+        $requestOption = '';
         $end = end($array);
 
         foreach($array as $key => $entry) {
@@ -112,6 +112,12 @@ class Client
             }
 
         }
+
+        if($requestOption !== ''){
+
+            $requestOption = (string) "?".$requestOption;
+        }
+
         return $requestOption;
     }
 
@@ -177,6 +183,31 @@ class Client
         }
 
         $responseBody = json_decode($responseBody, true);
+
+        switch( json_last_error() ) {
+            case JSON_ERROR_DEPTH:
+                throw new Exception('JSON error: Maximum stack depth has been exceeded');
+                break;
+
+            case JSON_ERROR_STATE_MISMATCH:
+                throw new Exception('JSON error: Underflow or the modes mismatch');
+                break;
+
+            case JSON_ERROR_CTRL_CHAR:
+                throw new Exception('JSON error: unexpected ctrl charachter');
+                break;
+
+            case JSON_ERROR_SYNTAX:
+                throw new Exception('JSON error: syntax error, malformed JSON detected');
+                break;
+
+            case JSON_ERROR_UTF8:
+                throw new Exception('JSON error: Malformed UTF_* charachters, possibly incorrectly encoded');
+                break;
+            case JSON_ERROR_NONE:
+            default:
+                break;
+        }
 
         $statusArray['response']['body'] = $responseBody;
         $statusArray['response']['header']['http_code'] = $curlInfoArray['http_code'];
