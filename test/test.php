@@ -317,6 +317,122 @@ class datalancheTestSequence
         return $use_raw;
     }
 
+    public function testResultsMediator($serverResponseString, $curlInfoArray)
+    {
+        $statusArray = array();
+        $statusArray['request'] = array();
+        $statusArray['response'] = array();
+        $statusArray['request']['header'] = array();
+        $statusArray['response']['header'] = array();
+        $statusArray['response']['body'] = array();
+
+        $responseHeader = substr($serverResponseString, 0, $curlInfoArray['header_size']);
+        $responseBody = substr($serverResponseString, $curlInfoArray['header_size']);
+        $responseHeader = explode("\n", $responseHeader);
+        $statusArray['response']['header']['status'] = $responseHeader[0];
+
+        array_shift($responseHeader);
+
+        foreach($responseHeader as $value)
+        {
+            $middle = explode(":", $value);
+            if(count($middle) <= 1)
+            {
+                /*
+                * The explode function has returned an empty row result
+                * which means that the current slot is porbably part of
+                * the whitespace returned in the response. This happens when
+                * the curl library appends the header is appended to the response string.
+                * Therefore skip appending it to the content array
+                * and move to the next value slot.
+                */
+            }else{
+
+                $statusArray['response']['header'][trim($middle[0])] = trim($middle[1]);
+            }
+        }
+
+        $responseBody = json_decode($responseBody, true);
+
+        $statusArray['response']['body'] = $responseBody;
+        $statusArray['response']['header']['http_code'] = $curlInfoArray['http_code'];
+
+        $requestHeader = explode("\n", $curlInfoArray['request_header']);
+        $statusArray['request']['header']['operation'] = explode(" ", $requestHeader[0]);
+        $statusArray['request']['header']['url_parameters'] = $statusArray['request']['header']['operation'][1];
+        $statusArray['request']['header']['http_version'] = $statusArray['request']['header']['operation'][2];
+        $statusArray['request']['header']['operation'] = $statusArray['request']['header']['operation'][0];
+
+        array_shift($requestHeader);
+
+        foreach($requestHeader as $value)
+        {
+            $middle = explode(":", $value);
+            if(count($middle) <= 1)
+            {
+                //the explode function has created a white-space entry
+            }else{
+
+                $statusArray['request']['header'][trim($middle[0])] = trim($middle[1]);
+            }
+        }
+        $statusArray['curl_info_array'] = $curlInfoArray;
+
+        return $statusArray;
+    }
+
+    public function testGetDebug($curlInfo, $curlExecResult)
+    {
+        $curlExecResultArray = $this->testResultsMediator($curlExecResult, $curlInfo);
+        
+        $debugObject = array(
+                'request' => array (
+                    'method' => $curlExecResultArray['request']['header']['operation'],
+                    'url' => $curlExecResultArray['curl_info_array']['url'],
+                    'headers' => $curlExecResultArray['request']['header']
+                    ),
+                'body' => $curlExecResultArray['request']['header']['url_parameters'],
+                'response' => array (
+                    'http_status' => $curlExecResultArray['response']['header']['http_code'],
+                    'http_version' => $curlExecResultArray['request']['header']['http_version'],
+                    'headers' => $curlExecResultArray['response']['header']
+                    ),
+                'data' => $curlExecResultArray['response']['body'],
+                'curl_info_array' => $curlExecResultArray['curl_info_array']
+            );
+
+        return $debugObject;
+    }
+
+    public function executeRawQuery($curlHandle)
+    {
+        $curlExecResult = null; //variable for curl execution handle
+        $curlInfo = null;
+        $responseObject = null;
+
+        $curlExecResult = curl_exec($curlHandle); // now actually making the only outside call  
+        $curlInfo = curl_getinfo($curlHandle);
+        curl_close($curlHandle);
+
+        $responseObject = $this->testGetDebug($curlInfo, $curlExecResult);
+
+        try {
+
+            if(($curlInfo['http_code'] < 200)
+                || ($curlInfo['http_code'] > 300)
+            ) {
+                throw new DLException($responseObject);
+            }
+
+        }catch(DLException $e) {
+
+            echo "DL-ERROR: ".$e."\n";
+        }
+
+
+        return($responseObject);
+    }
+
     //  WHAT IS $URL SUPPOSED TO BE? FULL URL?
 
     public function queryRaw($client, $test, $type, $url, $body) {
@@ -335,7 +451,7 @@ class datalancheTestSequence
             curl_setopt($curlHandle, CURLOPT_CUSTOMREQUEST, 'DELETE');
             curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
             curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
-            $results = $client->handleResults($curlHandle, $completeInfoArray);
+            $results = $this->executeRawQuery($curlHandle);
             $results = $this->handleTestResult($test, $results, $body);
 
             return $results; 
@@ -346,7 +462,7 @@ class datalancheTestSequence
             $curlHandle = $this->rawCurlCreator();
             curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
             curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
-            $results = $client->handleResults($curlHandle, $completeInfoArray);
+            $results = $this->executeRawQuery($curlHandle);
             $results = $this->handleTestResult($test, $results, $body);
 
             return $results;
@@ -377,7 +493,7 @@ class datalancheTestSequence
             curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
             curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
 
-            $results = $client->handleResults($curlHandle);
+            $results = $this->executeRawQuery($curlHandle);
             $results = $this->handleTestResult($test, $results, $body);
 
             return $results;
