@@ -8,11 +8,11 @@
 * target: datalanche
 */
 /* DEPENDICES */
-include 'query.php';
+include 'DLQuery.php';
 include 'expression.php';
 include 'DLException.php';
 
-class Client 
+class DLClient 
 {
     private $_parameters;
     private $_key;
