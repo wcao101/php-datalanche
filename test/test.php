@@ -1,6 +1,6 @@
 <?php
 
-include '../lib/client.php';
+include '../lib/DLClient.php';
 include 'raw_query.php';
 
 class datalancheTestSequence
@@ -91,7 +91,10 @@ class datalancheTestSequence
             }
         }
 
-        $requestOption = (string) "?".$requestOption;
+        if($requestOption !== '') {
+
+            $requestOption = (string) "?".$requestOption;
+        }
 
         return $requestOption;
     }
@@ -531,7 +534,7 @@ class datalancheTestSequence
 
         } else {
 
-            $query = new Query();
+            $query = new DLQuery();
             unset($params->key); 
             unset($params->secret);
 
@@ -655,7 +658,7 @@ class datalancheTestSequence
 
         } else {
 
-            $query = new Query();
+            $query = new DLQuery();
             unset($params->key); 
             unset($params->secret);
 
@@ -729,7 +732,7 @@ class datalancheTestSequence
 
         } else {
 
-            $query = new Query();
+            $query = new DLQuery();
 
             unset($params->key); 
             unset($params->secret);
@@ -787,7 +790,7 @@ class datalancheTestSequence
 
         } else {
 
-            $query = new Query();
+            $query = new DLQuery();
 
             if( (property_exists($params, 'table_name')) ) {
 
@@ -838,11 +841,11 @@ class datalancheTestSequence
 
             if($test->expected === 200) { 
 
-                $query = new Query();
+                $query = new DLQuery();
 
             } else {
 
-                    $query= new Query();
+                    $query= new DLQuery();
                 }
 
                 unset($params->key); 
@@ -876,7 +879,7 @@ class datalancheTestSequence
             return $results;
         } else {
 
-            $query = new Query();
+            $query = new DLQuery();
             unset($params->key); 
             unset($params->secret);
 
@@ -940,7 +943,7 @@ class datalancheTestSequence
 
         }else {
 
-            $query = new Query();
+            $query = new DLQuery();
             unset($params->key); 
             unset($params->secret);
 
@@ -1015,7 +1018,7 @@ class datalancheTestSequence
             return $results;
 
         }else {
-            $query = new Query();
+            $query = new DLQuery();
             unset($params->key); 
             unset($params->secret);
 
@@ -1098,7 +1101,7 @@ class datalancheTestSequence
 
         } else {
 
-            $query = new Query();
+            $query = new DLQuery();
 
             if(property_exists($params, 'table_name')) {
 
@@ -1184,7 +1187,7 @@ class datalancheTestSequence
 
     public function cleanSets($client)
     {
-        $query = new Query();
+        $query = new DLQuery();
 
         try {
 
@@ -1228,7 +1231,7 @@ class datalancheTestSequence
             array_push($tests, $json);
         }
 
-        $client = new Client($this->deployed_client_parameters['secret'],
+        $client = new DLClient($this->deployed_client_parameters['secret'],
                              $this->deployed_client_parameters['key'],
                              $this->deployed_client_parameters['host'],
                              $this->deployed_client_parameters['port'],
