@@ -1,17 +1,27 @@
 <?php
 /*
-* client.php
+* DLClient.php
 * created by: cristian cavalli
 * property of: Datalanche Inc.
 * purpose: allow interaction between php clients and
 * dalanche services
 * target: datalanche
+* operation: parses php native data typers into propreitary
+* json format for datalanche and then mediates responses from
+* datalanche services.
 */
 /* DEPENDICES */
 include 'DLQuery.php';
-include 'expression.php';
+include 'DLExpression.php';
 include 'DLException.php';
 
+
+/*
+\
+*Class DLClient contains the overwhelming amount of functionality
+*regarding connection creation, control and closure.
+/
+*/
 class DLClient 
 {
     private $_parameters;
@@ -581,7 +591,7 @@ class DLClient
 
         $curlExecResult = curl_exec($curlHandle); // now actually making the only outside call  
         $curlInfo = curl_getinfo($curlHandle);
-        curl_close($curlHandle);
+        $this->close($curlHandle);
 
         $responseObject = $this->getDebugInfo($curlInfo, $curlExecResult);
 
@@ -652,6 +662,18 @@ class DLClient
     public function getClientUrl()
     {
         return $this->_url;
+    }
+
+    public function close($curlHandle)
+    {
+        try {
+            curl_close($curlHandle);
+        } catch(Exception $e) {
+            echo $e."\n";
+            return(false);
+        }
+
+        return(true);
     }
 
     private function getDebugInfo($curlInfo, $curlExecResult)
