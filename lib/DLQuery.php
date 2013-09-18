@@ -6,7 +6,7 @@
 * servers.
 */
 
-class Query
+class DLQuery
 {
     private $_methodType;
     private $_baseUrl;
