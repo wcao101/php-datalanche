@@ -108,7 +108,7 @@ class DLClient
             || ($ssl === 0)
             || ($ssl === 'false')
         ) {
-            $this->_verifySsl = false; //Verify ssl is off, unverfied certification possible.
+            $this->_verifySsl = false;
         } elseif(($ssl === null)
             || ($ssl === true) 
             || ($ssl === 1) 
@@ -120,8 +120,6 @@ class DLClient
             $this->_verifySsl = true;
         }
 
-        /*Now testing for provided api key & secret.
-        If these value are null then they are left unset (null).*/
         if($secret != null) {
             $this->_secret = $secret; 
         }
@@ -129,76 +127,9 @@ class DLClient
             $this->_key = $key;
         }
 
-        /*
-        *RETURN THE OBJECT AFTER EXECUTION
-        */
         return $this;
     }
 
-    /**
-    * httpAssocEncopde is built as a stripped down alternative to the built
-    * in functionality of http_build_query which does not set null entries
-    * during url encoding, and therefore is not compliant with datalanche
-    * testing/operating SOP. The function expects a one dimensional (depth
-    * of one) array of keyed values. They key is then encoded as the variable
-    * name and the accompaying array value slot is set as the value of the (new)
-    * get param (encoded simply as a string for url use). This function is
-    * unoptimized and not tested for signifigant load.
-    *
-    * @access private
-    * @param array $array a single dimension (depth of one) array which contains a list of keyed values
-    * @return string $requestOption a string of compiled get arguments
-    */
-    private function httpAssocEncode($array)
-    {
-        $requestOption = ''; //this is the intended holder of the final string, set it to nothing first.
-        $end = end($array); //get the end of the array
-
-        /*
-        * I disclaim the following functionality as a temporary, hacky way 
-        * to finsih the intended task, simple and stripped down as it is.
-        */
-
-        foreach($array as $key => $entry) { 
-            /*
-            * Iterate through the entries and check to see if they are null.
-            * The following check and assignment is the only reason this code
-            * exists as http_build_query regards keyed values in an array set
-            * to null as non-existent, therefore not allowing unset variables.
-            */
-
-            /*
-            * The following check & assigment is redundant. PHP, though, might be better off 
-            * setting $entry = '' Running perscribed tests with either value does not 
-            * produce diffrences in results or execution since either values looks the
-            * same on the get param line e.g. localhost:4001?var_one=&var_two=value
-            * where var_one is the entry that was set to null when passed to client.
-            */
-            if($entry === null) {
-                $entry = null;
-            }
-            
-            /*
-            * Check to see if we are at the end of the array
-            * if we are then we won't append the '&' because
-            * we are at the end of the params list.
-            */
-            if($entry == $end) {
-                $requestOption = (string) $requestOption.urlencode($key).'='.urlencode($entry);
-
-            } else {
-                $requestOption = (string) $requestOption.urlencode($key).'='.urlencode($entry).'&';
-            }
-
-        }
-
-        if($requestOption !== ''){
-
-            $requestOption = (string) "?".$requestOption;
-        }
-
-        return $requestOption;
-    }
 
     /**
     * curlCreator is a functionalization of basic curl
@@ -217,7 +148,6 @@ class DLClient
     private function curlCreator()
     {
         /*
-        * The options array 
         * WARNING: changing a value in this array will change all related values across request types
         */
         $options = array (
@@ -238,9 +168,9 @@ class DLClient
         /**
         * @var resource/curl contains the curl handle
         */
-        $curlHandle = curl_init(); //We are initalizing the curl connection here
+        $curlHandle = curl_init();
         
-        //Give it the values we just laid out
+        //MUST USE setopt_array if array!
         curl_setopt_array($curlHandle, $options);
 
         return $curlHandle;
@@ -273,13 +203,10 @@ class DLClient
         $statusArray['response']['header'] = array();
         $statusArray['response']['body'] = array();
 
-        //Get the header minus the possible body
+        //Seperate the header from the body in the return string and store both
         $responseHeader = substr($serverResponseString, 0, $curlInfoArray['header_size']);
-        //whatever is left over is the response body
         $responseBody = substr($serverResponseString, $curlInfoArray['header_size']);
-        //Explode the header across the newlines, which is the way each header value slot is seperated
         $responseHeader = explode("\n", $responseHeader);
-        //Header status will always be the 0th entry
         $statusArray['response']['header']['status'] = $responseHeader[0];
 
         array_shift($responseHeader);
@@ -617,44 +544,9 @@ class DLClient
         $queryString = null;
         $queryParameters = $query->getParameters();
         $queryBaseUrl = $query->getUrl();
-        $getParameters = array();
-        /*
-        if($queryBaseUrl === '/drop_table')
-        {
-            if($queryParameters['table_name']) {
-
-                $getParameters['table_name'] = $queryParameters['table_name'];
-
-            } elseif ( !$queryParameters['table_name'] ) {
-
-                $getParameters['table_name'] = null;
-
-            }
-        } /* elseif($queryBaseUrl === '/get_table_info') {
-
-            if($queryParameters['table_name']) {
-
-                $getParameters['table_name'] = $queryParameters['table_name'];
-
-            }elseif(!$queryParameters['table_name']) {
-
-                $getParameters['table_name'] = null;
-            }
-        } elseif($queryBaseUrl === '/get_table_list') {
-
-            $queryBaseUrl = $this->_url.$queryBaseUrl;
-            //echo "get table list found: ".$queryBaseUrl."\n";
-            return $queryBaseUrl;
-        }*/
-
-        $queryString = $this->httpAssocEncode($getParameters);
-        //echo "QUERY: ".$queryString."\n";
 
  
-        $queryBaseUrl = $this->_url.$queryBaseUrl.$queryString;      
-        //echo $this->_url."\n";
-        //var_dump($queryBaseUrl);
-       // exit();
+        $queryBaseUrl = $this->_url.$queryBaseUrl;     
 
         return $queryBaseUrl;
     }
