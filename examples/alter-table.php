@@ -1,7 +1,5 @@
 <?php
 
-include "../lib/DLClient.php";
-
 class AlterTableExample
 {
     public function __construct($secret, $key, $host, $port, $ssl)
@@ -38,13 +36,24 @@ class AlterTableExample
         $query->dropColumn('col2');
         $query->dropColumn('col3');
         $query->alterColumn('col1', array('data_type'=>'string'));
+
         $results = $client->query($query);
-        echo "\n----\n";
-        var_dump($results);
-        echo "\n----\n";
+        echo "----\n";
+        echo "alter-table:\n";
+            echo "code: ".$results['response']['headers']['http_code']."\n";
+            if($results['response']['headers']['http_code'] === 200)
+            {
+                echo "!! PASS !!\n";
+                echo "----\n";
+                return true;
+            } else {
+                echo "!! FAIL !!\n";
+                echo "----\n";
+                return false;
+            }
     }
 
 }
 
-$alterTableExample = new AlterTableExample('VCBA1hLyS2mYdrL6kO/iKQ==','7zNN1Pl9SQ6lNZwYe9mtQw==', 'localhost', 4001, false);
+
 ?>
