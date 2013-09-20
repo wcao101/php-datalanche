@@ -283,6 +283,7 @@ class datalancheTestSequence
             if( ($test->name === "insert_into: values = one full row")
                 || ($test->name === "drop_table: table_name = array")
                 || ($test->name === "get_table_info: table_name = array")
+                || ($test->name === "get_table_info: table_name = integer")
             ) {
 
                 echo "--------------\n";
@@ -461,6 +462,37 @@ class datalancheTestSequence
 
         } elseif ($type === 'get') {
             //get request
+
+            //$completeInfoArray['post_request_body'] = $body;
+            $requestUrl = $client->getClientUrl().$url;
+            $curlHandle = $this->rawCurlCreator();
+
+            if(is_array($body) && count($body) === 0)
+            {
+                $body = null;
+            }else{
+            
+                if($test->expected->statusCode === 200)
+                {
+                    $body = json_encode($body, JSON_FORCE_OBJECT);
+                }else{
+                    $body = json_encode($body);
+                }
+            }
+            
+            curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
+            curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type application/json', 'Content-Length: '.strlen($body)));
+            curl_setopt($curlHandle, CURLOPT_POST, true);
+            curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $body);
+            curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
+            curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
+
+            $results = $this->executeRawQuery($curlHandle);
+            $results = $this->handleTestResult($test, $results, $body);
+
+            return $results;
+
+            /*
             $requestUrl = $client->getClientUrl().$url.$this->httpAssocEncode($body);
             $curlHandle = $this->rawCurlCreator();
             curl_setopt($curlHandle, CURLOPT_USERPWD, $authString);
@@ -469,6 +501,7 @@ class datalancheTestSequence
             $results = $this->handleTestResult($test, $results, $body);
 
             return $results;
+            */
 
         } elseif ($type === 'post') {
             //post request
@@ -483,9 +516,9 @@ class datalancheTestSequence
             
                 if($test->expected->statusCode === 200)
                 {
-                    $body = json_encode($body, JSON_FORCE_OBJECT | JSON_NUMERIC_CHECK);
+                    $body = json_encode($body, JSON_FORCE_OBJECT);
                 }else{
-                    $body = json_encode($body, JSON_NUMERIC_CHECK);
+                    $body = json_encode($body);
                 }
             }
             
