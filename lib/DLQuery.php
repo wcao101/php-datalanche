@@ -9,7 +9,7 @@
 class DLQuery
 {
     private $_methodType;
-    private $_baseUrl;
+    private $_url;
     private $_parameters;
     /*
     public $test_key;
@@ -18,8 +18,7 @@ class DLQuery
 
     public function __construct() {
 
-        $this->_methodType = 'get';
-        $this->_baseUrl = '/';
+        $this->_url = '/';
 
         $this->_parameters = array();
 
@@ -53,8 +52,7 @@ class DLQuery
 
     public function alterTable($tableName)
     {
-        $this->_methodType = 'post';
-        $this->_baseUrl = '/alter_table';
+        $this->_url = '/alter_table';
         $this->_parameters['table_name'] = $tableName;
 
         return $this;
@@ -69,8 +67,7 @@ class DLQuery
 
     public function createTable($tableName)
     {
-        $this->_methodType = 'post';
-        $this->_baseUrl = '/create_table';
+        $this->_url = '/create_table';
         $this->_parameters['table_name'] = $tableName;
 
         return $this;
@@ -78,8 +75,7 @@ class DLQuery
 
     public function deleteFrom($tableName)
     {
-        $this->_methodType = 'post';
-        $this->_baseUrl = '/delete_from';
+        $this->_url = '/delete_from';
         $this->_parameters['table_name'] = $tableName;
 
         return $this;
@@ -113,8 +109,7 @@ class DLQuery
 
     public function dropTable($tableName)
     {
-        $this->_methodType = 'del';
-        $this->_baseUrl = '/drop_table';
+        $this->_url = '/drop_table';
         $this->_parameters['table_name'] = $tableName;
 
         return $this;
@@ -129,8 +124,7 @@ class DLQuery
 
     public function getTableInfo($tableName)
     {
-        $this->_methodType = 'get';
-        $this->_baseUrl = '/get_table_info';
+        $this->_url = '/get_table_info';
         $this->_parameters['table_name'] = $tableName;
 
         return $this;
@@ -138,8 +132,7 @@ class DLQuery
 
     public function getTableList()
     {
-        $this->_methodType = 'get';
-        $this->_baseUrl = '/get_table_list';
+        $this->_url = '/get_table_list';
 
         return $this;
     }
@@ -152,8 +145,7 @@ class DLQuery
 
     public function insertInto($tableName)
     {
-        $this->_methodType = 'post';
-        $this->_baseUrl = '/insert_into';
+        $this->_url = '/insert_into';
         $this->_parameters['table_name'] = $tableName;
 
         return $this;
@@ -203,8 +195,7 @@ class DLQuery
 
     public function select($columns)
     {
-        $this->_methodType = 'post';
-        $this->_baseUrl = '/select_from';
+        $this->_url = '/select_from';
         $this->_parameters['select'] = $columns;
 
         return $this;
@@ -233,8 +224,7 @@ class DLQuery
 
     public function update($tableName)
     {
-        $this->_methodType = 'post';
-        $this->_baseUrl = '/update';
+        $this->_url = '/update';
         $this->_parameters['table_name'] = $tableName;
 
         return $this;
@@ -259,28 +249,19 @@ class DLQuery
         return $this;
     }
 
-    public function getMethodType()
+    public function getUrl()
     {
-        return $this->_methodType;
-    }
-
-    public function getBaseUrl()
-    {
-        return $this->_baseUrl;
+        return $this->_url;
     }
 
     public function getParameters()
     {
         return $this->_parameters;
     }
-    public function setMethod($method)
-    {
-        $this->_methodType = $method;
-    }
 
-    public function setBaseUrl($url)
+    public function setUrl($url)
     {
-        $this->_baseUrl = $url;
+        $this->_url = $url;
     }
 }
 ?>
