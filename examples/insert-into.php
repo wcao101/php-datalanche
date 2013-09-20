@@ -1,14 +1,14 @@
 <?php
 
-include "../lib/client.php";
+include "../lib/DLClient.php";
 
 class InsertIntoExample
 {
     public function __construct($secret, $key, $host, $port, $ssl)
     {
         $results = null;
-        $client = new Client($secret, $key, $host, $port, $ssl);
-        $query = new Query();
+        $client = new DLClient($secret, $key, $host, $port, $ssl);
+        $query = new DLQuery();
         $query->insertInto('my_table');
         $query->values(
             array(
