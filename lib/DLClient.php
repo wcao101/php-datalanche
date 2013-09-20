@@ -387,7 +387,7 @@ class DLClient
         return $statusArray;
     }
 
-    /**
+    /*
     * BOOKMARK
     */
 
@@ -406,7 +406,32 @@ class DLClient
         }
 
 
-        if($queryBaseUrl === '/alter_table') {
+        if($queryBaseUrl === '/drop_table')
+        {
+            if(array_key_exists('table_name', $queryParameters)) {
+                $postRequestBody['table_name'] = $queryParameters['table_name'];
+
+            } else {
+                $postRequestBody['table_name'] = null;
+
+            }
+        } elseif($queryBaseUrl === '/get_table_info') {
+
+            if( array_key_exists('table_name', $queryParameters) ) {
+
+                $postRequestBody['table_name'] = $queryParameters['table_name'];
+
+            } else {
+
+                $postRequestBody['table_name'] = null;
+            }
+        } elseif($queryBaseUrl === '/get_table_list') {
+
+            $queryBaseUrl = $this->_url.$queryBaseUrl;
+            //echo "get table list found: ".$queryBaseUrl."\n";
+            return new stdClass();
+
+        } elseif ($queryBaseUrl === '/alter_table') {
 
             if(array_key_exists('add_columns', $queryParameters)) {
                 $postRequestBody['add_columns'] = $queryParameters['add_columns'];
@@ -605,7 +630,7 @@ class DLClient
                 $getParameters['table_name'] = null;
 
             }
-        } elseif($queryBaseUrl === '/get_table_info') {
+        } /* elseif($queryBaseUrl === '/get_table_info') {
 
             if($queryParameters['table_name']) {
 
@@ -620,15 +645,16 @@ class DLClient
             $queryBaseUrl = $this->_url.$queryBaseUrl;
             //echo "get table list found: ".$queryBaseUrl."\n";
             return $queryBaseUrl;
-        }
+        }*/
 
         $queryString = $this->httpAssocEncode($getParameters);
-        echo "QUERY: ".$queryString."\n";
+        //echo "QUERY: ".$queryString."\n";
 
-        if($queryString !== null)
-        {
-            $queryBaseUrl = $this->_url.$queryBaseUrl.$queryString;        
-        }
+ 
+        $queryBaseUrl = $this->_url.$queryBaseUrl.$queryString;      
+        //echo $this->_url."\n";
+        //var_dump($queryBaseUrl);
+       // exit();
 
         return $queryBaseUrl;
     }
@@ -695,10 +721,15 @@ class DLClient
         $requestUrl = $this->getUrl($query);
         $curlHandle = $this->curlCreator();
         $completeInfoArray = $query->getParameters();
-        $postRequestBody = null;
+        $postRequestBody = $this->getBody($query);
+        echo "POST\n";
+        var_dump($postRequestBody);
         $results = null;
 
+        curl_setopt($curlHandle, CURLOPT_POST, true);
         curl_setopt($curlHandle, CURLOPT_USERPWD, $httpAuthString);
+        curl_setopt($curlHandle, CURLOPT_POSTFIELDS, json_encode($postRequestBody));
+        curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
         curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
 
         $results = $this->handleResults($curlHandle);
@@ -745,7 +776,7 @@ class DLClient
             if(($curlInfo['http_code'] < 200)
                 || ($curlInfo['http_code'] > 300)
             ) {
-                throw new DLException($responseObject);
+                    throw new DLException($responseObject);
             }
 
         }catch(DLException $e) {
