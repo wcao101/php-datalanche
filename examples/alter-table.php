@@ -1,13 +1,13 @@
 <?php
 
-include "../lib/client.php";
+include "../lib/DLClient.php";
 
 class AlterTableExample
 {
     public function __construct($secret, $key, $host, $port, $ssl)
     {
-        $client = new Client($secret, $key, $host, $port, $ssl);
-        $query = new Query();
+        $client = new DLClient($secret, $key, $host, $port, $ssl);
+        $query = new DLQuery();
         $results = null;
         $query->alterTable('my_table');
         $query->rename('my_new_table');
