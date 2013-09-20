@@ -129,7 +129,30 @@ class DLClient
         return $this;
     }
 
-    public function setKey($key) {
+    public function close($curlHandle)
+    {
+        try {
+            curl_close($curlHandle);
+        } catch(Exception $e) {
+            echo $e."\n";
+            return(false);
+        }
+
+        return(true);
+    }
+
+    public function getKey()
+    {
+        return $this->_key;
+    }
+
+    public function getSecret()
+    {
+        return $this->_secret;
+    }
+
+    public function setKey($key) 
+    {
 
         $this->_key = $key;
 
@@ -161,29 +184,6 @@ class DLClient
             return false;
         }
     }
-
-    public function getKey()
-    {
-        return $this->_key;
-    }
-
-    public function getSecret()
-    {
-        return $this->_secret;
-    }
-
-    public function close($curlHandle)
-    {
-        try {
-            curl_close($curlHandle);
-        } catch(Exception $e) {
-            echo $e."\n";
-            return(false);
-        }
-
-        return(true);
-    }
-
 
     /**
     * curlCreator is a functionalization of basic curl
@@ -235,11 +235,114 @@ class DLClient
         return $curlHandle;
     }
 
+    private function clientPost($query)
+    {
+        $key = $this->_key;
+        $secret = $this->_secret;
+        $postRequestBody = $this->getBody($query);
+        $httpAuthString = (string) $key.":".$secret;
+        $requestUrl = $this->getUrl($query);
+        $curlHandle = $this->curlCreator($httpAuthString, $postRequestBody, $requestUrl);
+
+        $results = $this->handleResults($curlHandle);
+
+        return $results;
+    }
+
+    private function getBody($query)
+    {
+        
+        $queryParameters = $query->getParameters();
+        $queryBaseUrl = $query->getUrl();
+        $postRequestBody = array();
+
+        if(($query === null)) {
+            throw new Exception("The query for function getBody() was null\n");
+            exit();
+
+        } else {
+            if( (count($queryParameters) === 0))
+            {
+                return new stdClass();
+            }
+            return $queryParameters;
+        }
+    }
+
+    private function getDebugInfo($curlInfo, $curlExecResult)
+    {
+        $curlExecResultArray = $this->parseCurlResult($curlExecResult, $curlInfo);
+        
+        $debugObject = array(
+                'request' => array (
+                    'method' => $curlExecResultArray['request']['header']['operation'],
+                    'url' => $curlExecResultArray['curl_info_array']['url'],
+                    'headers' => $curlExecResultArray['request']['header']
+                    ),
+                'body' => $curlExecResultArray['request']['header']['url_parameters'],
+                'response' => array (
+                    'http_status' => $curlExecResultArray['response']['header']['http_code'],
+                    'http_version' => $curlExecResultArray['request']['header']['http_version'],
+                    'headers' => $curlExecResultArray['response']['header']
+                    ),
+                'data' => $curlExecResultArray['response']['body'],
+                'curl_info_array' => $curlExecResultArray['curl_info_array']
+            );
+
+        return $debugObject;
+    }
+
+    private function getUrl($query)
+    {
+        if($query === null) {
+
+            return '/';
+        }
+
+        $queryBaseUrl = $query->getUrl();
+
+ 
+        $queryBaseUrl = $this->_url.$queryBaseUrl;     
+
+        return $queryBaseUrl;
+    }
+
+    private function handleResults($curlHandle)
+    {
+        //handle results gets curl handle, executes it, and
+        //then returns pertinant results about the interaction
+        $curlExecResult = null; //variable for curl execution handle
+        $curlInfo = null;
+        $responseObject = null;
+
+        $curlExecResult = curl_exec($curlHandle); // now actually making the only outside call  
+        $curlInfo = curl_getinfo($curlHandle);
+        $this->close($curlHandle);
+
+        $responseObject = $this->getDebugInfo($curlInfo, $curlExecResult);
+
+        try {
+
+            if(($curlInfo['http_code'] < 200)
+                || ($curlInfo['http_code'] > 300)
+            ) {
+                    throw new DLException($responseObject);
+            }
+
+        }catch(DLException $e) {
+
+            echo "DL-ERROR: ".$e."\n";
+        }
+
+
+        return($responseObject);
+    }
+
     /**
-    * resultsMediator was built off the need to functionalize the parsing methods
+    * parseCurlResult was built off the need to functionalize the parsing methods
     * required to synthesize the headers and response body from the semi unhelpful datatype
     * that the curl libraries return by default (a giant string).
-    * resultsMediator explodes the results and requests into keyed arrays contained by
+    * parseCurlResult explodes the results and requests into keyed arrays contained by
     * a singular array which the user can then refrence to get request/response headers,
     * general info, and response body content. This function also contains the json error
     * check which is used to throw specific errors at the json_decode level.
@@ -373,45 +476,6 @@ class DLClient
         return $statusArray;
     }
 
-    /*
-    * BOOKMARK
-    */
-
-    private function getBody($query)
-    {
-        
-        $queryParameters = $query->getParameters();
-        $queryBaseUrl = $query->getUrl();
-        $postRequestBody = array();
-
-        if(($query === null)) {
-            throw new Exception("The query for function getBody() was null\n");
-            exit();
-
-        } else {
-            if( (count($queryParameters) === 0))
-            {
-                return new stdClass();
-            }
-            return $queryParameters;
-        }
-    }
-
-    private function getUrl($query)
-    {
-        if($query === null) {
-
-            return '/';
-        }
-
-        $queryBaseUrl = $query->getUrl();
-
- 
-        $queryBaseUrl = $this->_url.$queryBaseUrl;     
-
-        return $queryBaseUrl;
-    }
-
     public function query($query)
     {
         $results = null;
@@ -429,75 +493,8 @@ class DLClient
         return $results;
     }
 
-    private function clientPost($query)
-    {
-        $key = $this->_key;
-        $secret = $this->_secret;
-        $postRequestBody = $this->getBody($query);
-        $httpAuthString = (string) $key.":".$secret;
-        $requestUrl = $this->getUrl($query);
-        $curlHandle = $this->curlCreator($httpAuthString, $postRequestBody, $requestUrl);
-
-        $results = $this->handleResults($curlHandle);
-
-        return $results;
-    }
-
-    private function handleResults($curlHandle)
-    {
-        //handle results gets curl handle, executes it, and
-        //then returns pertinant results about the interaction
-        $curlExecResult = null; //variable for curl execution handle
-        $curlInfo = null;
-        $responseObject = null;
-
-        $curlExecResult = curl_exec($curlHandle); // now actually making the only outside call  
-        $curlInfo = curl_getinfo($curlHandle);
-        $this->close($curlHandle);
-
-        $responseObject = $this->getDebugInfo($curlInfo, $curlExecResult);
-
-        try {
-
-            if(($curlInfo['http_code'] < 200)
-                || ($curlInfo['http_code'] > 300)
-            ) {
-                    throw new DLException($responseObject);
-            }
-
-        }catch(DLException $e) {
-
-            echo "DL-ERROR: ".$e."\n";
-        }
 
 
-        return($responseObject);
-    }
-
-    
-
-    private function getDebugInfo($curlInfo, $curlExecResult)
-    {
-        $curlExecResultArray = $this->parseCurlResult($curlExecResult, $curlInfo);
-        
-        $debugObject = array(
-                'request' => array (
-                    'method' => $curlExecResultArray['request']['header']['operation'],
-                    'url' => $curlExecResultArray['curl_info_array']['url'],
-                    'headers' => $curlExecResultArray['request']['header']
-                    ),
-                'body' => $curlExecResultArray['request']['header']['url_parameters'],
-                'response' => array (
-                    'http_status' => $curlExecResultArray['response']['header']['http_code'],
-                    'http_version' => $curlExecResultArray['request']['header']['http_version'],
-                    'headers' => $curlExecResultArray['response']['header']
-                    ),
-                'data' => $curlExecResultArray['response']['body'],
-                'curl_info_array' => $curlExecResultArray['curl_info_array']
-            );
-
-        return $debugObject;
-    }
 }
 
 ?>
