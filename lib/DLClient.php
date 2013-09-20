@@ -131,13 +131,7 @@ class DLClient
 
     public function close($curlHandle)
     {
-        try {
-            curl_close($curlHandle);
-        } catch(Exception $e) {
-            echo $e."\n";
-            return(false);
-        }
-
+        $close = curl_close($curlHandle);
         return(true);
     }
 
@@ -258,8 +252,6 @@ class DLClient
 
         if(($query === null)) {
             throw new Exception("The query for function getBody() was null\n");
-            exit();
-
         } else {
             if( (count($queryParameters) === 0))
             {
@@ -321,19 +313,12 @@ class DLClient
 
         $responseObject = $this->getDebugInfo($curlInfo, $curlExecResult);
 
-        try {
 
             if(($curlInfo['http_code'] < 200)
                 || ($curlInfo['http_code'] > 300)
             ) {
-                    throw new DLException($responseObject);
+                throw new DLException($responseObject);
             }
-
-        }catch(DLException $e) {
-
-            echo "DL-ERROR: ".$e."\n";
-        }
-
 
         return($responseObject);
     }
@@ -484,7 +469,6 @@ class DLClient
             || ($query === null) 
         ) {
             throw new Exception("Query was null in client->query(), Query must have content.");
-            exit();
         } else {
 
              $results = $this->clientPost($query);
