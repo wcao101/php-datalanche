@@ -52,7 +52,6 @@ class DLClient
     private $_url;
     private $_verifySsl;
     private $_connection;
-    private $_getUrl;
     private $_host;
 
     /**
@@ -193,7 +192,7 @@ class DLClient
     * @return array $statusArray is an array of arrays contating info about the curl response & request
     */
 
-    private function resultsMediator($serverResponseString, $curlInfoArray)
+    private function parseCurlResult($serverResponseString, $curlInfoArray)
     {
         // Unecessary but helpful to demonstrate the basic structure of the return object
         $statusArray = array();
@@ -653,11 +652,6 @@ class DLClient
         }
     }
 
-    private function isNotNull($mixedVar)
-    {
-        return !is_null($mixedVar);
-    }
-
     public function getKey()
     {
         return $this->_key;
@@ -682,7 +676,7 @@ class DLClient
 
     private function getDebugInfo($curlInfo, $curlExecResult)
     {
-        $curlExecResultArray = $this->resultsMediator($curlExecResult, $curlInfo);
+        $curlExecResultArray = $this->parseCurlResult($curlExecResult, $curlInfo);
         
         $debugObject = array(
                 'request' => array (
