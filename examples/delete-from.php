@@ -1,16 +1,16 @@
 <?php
 
-include "../lib/client.php";
+include "../lib/DLClient.php";
 
 class DeleteFromExample
 {
     public function __construct($secret, $key, $host, $port, $ssl)
     {
         $results = null;
-        $client = new Client($secret, $key, $host, $port, $ssl);
+        $client = new DLClient($secret, $key, $host, $port, $ssl);
         $columnComparison = new DLExpression();
         $columnComparison->column('col3')->equals('hello');
-        $query = new Query();
+        $query = new DLQuery();
         $query->deleteFrom('my_table');
         $query->where($columnComparison);
 
