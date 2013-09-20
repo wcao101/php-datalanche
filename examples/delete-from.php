@@ -1,6 +1,5 @@
 <?php
 
-include "../lib/DLClient.php";
 
 class DeleteFromExample
 {
@@ -16,11 +15,21 @@ class DeleteFromExample
 
         $results = $client->query($query);
 
-        echo "\n----\n";
-        var_dump($results);
-        echo "\n----\n";
+        echo "----\n";
+        echo "delete-from-table\n";
+            echo "code: ".$results['response']['headers']['http_code']."\n";
+            if($results['response']['headers']['http_code'] === 200)
+            {
+                echo "!! PASS !!\n";
+                echo "----\n";
+                return true;
+            } else {
+                echo "!! FAIL !!\n";
+                echo "----\n";
+                return false;
+            }
     }
 }
 
-$deleteFromExample = new DeleteFromExample('VCBA1hLyS2mYdrL6kO/iKQ==','7zNN1Pl9SQ6lNZwYe9mtQw==', 'localhost', 4001, false);
+
 ?>
