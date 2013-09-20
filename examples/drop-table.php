@@ -1,15 +1,15 @@
 <?php
 
-include "../lib/client.php";
+include "../lib/DLClient.php";
 
 class DropTableExample
 {
     public function __construct($secret, $key, $host, $port, $ssl)
     {
         $results = null;
-        $client = new Client($secret, $key, $host, $port, $ssl);
-        $query = new Query();
-        $query->dropTable('my_new_table');
+        $client = new DLClient($secret, $key, $host, $port, $ssl);
+        $query = new DLQuery();
+        $query->dropTable('my_table');
 
         $results = $client->query($query);
         echo "\n----\n";
