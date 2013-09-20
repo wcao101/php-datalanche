@@ -1,10 +1,4 @@
 <?php
-/*
-* Query.php client library: written for Datalanche on august 20th 2013
-* property of: Datalanche
-* Target Operation: Formulate query for php interface to interact with datalanche
-* servers.
-*/
 
 class DLQuery
 {
@@ -42,10 +36,10 @@ class DLQuery
     {
         if( array_key_exists('alter_columns', $this->_parameters) === false ) {
 
-            $this->_parameters['alter_column'] = array();
+            $this->_parameters['alter_columns'] = new stdClass();
         }
 
-        $this->_parameters['alter_columns'][$columnName] = $object;
+        $this->_parameters['alter_columns']->$columnName = $object;
 
         return $this;
     }
@@ -120,6 +114,16 @@ class DLQuery
         $this->_parameters['from'] = $table;
 
         return $this;
+    }
+    
+    public function getUrl()
+    {
+        return $this->_url;
+    }
+
+    public function getParameters()
+    {
+        return $this->_parameters;
     }
 
     public function getTableInfo($tableName)
@@ -249,14 +253,6 @@ class DLQuery
         return $this;
     }
 
-    public function getUrl()
-    {
-        return $this->_url;
-    }
 
-    public function getParameters()
-    {
-        return $this->_parameters;
-    }
 }
 ?>
