@@ -395,7 +395,7 @@ class DLClient
     {
         
         $queryParameters = $query->getParameters();
-        $queryBaseUrl = $query->getBaseUrl();
+        $queryBaseUrl = $query->getUrl();
         $postRequestBody = array();
 
         if($query === null) {
@@ -616,7 +616,7 @@ class DLClient
 
         $queryString = null;
         $queryParameters = $query->getParameters();
-        $queryBaseUrl = $query->getBaseUrl();
+        $queryBaseUrl = $query->getUrl();
         $getParameters = array();
         /*
         if($queryBaseUrl === '/drop_table')
@@ -662,7 +662,6 @@ class DLClient
     public function query($query)
     {
         $results = null;
-        $queryMethodType = $query->getMethodType();
 
         if ( (!$query)
             || ($query === null) 
