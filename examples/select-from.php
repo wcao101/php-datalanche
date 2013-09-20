@@ -1,16 +1,16 @@
 <?php
 
-include "../lib/client.php";
+include "../lib/DLClient.php";
 
 class SelectFromExample
 {
     public function __construct($secret, $key, $host, $port, $ssl)
     {
         $results = null;
-        $client = new Client($secret, $key, $host, $port, $ssl);
+        $client = new DLClient($secret, $key, $host, $port, $ssl);
         $expression = new DLExpression();
         $expression->column('col3')->contains('hello');
-        $query = new Query();
+        $query = new DLQuery();
         $query->select(array('col1', 'col2'));
         $query->from('my_table');
         $query->where($expression);
