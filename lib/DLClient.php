@@ -618,7 +618,7 @@ class DLClient
         $queryParameters = $query->getParameters();
         $queryBaseUrl = $query->getBaseUrl();
         $getParameters = array();
-
+        /*
         if($queryBaseUrl === '/drop_table')
         {
             if($queryParameters['table_name']) {
@@ -745,11 +745,15 @@ class DLClient
         $requestUrl = $this->getUrl($query);
         $curlHandle = $this->curlCreator();
         $completeInfoArray = $query->getParameters();
-        $postRequestBody = null;
+        $postRequestBody = $this->getBody($query);
+        echo "POST\n";
+        var_dump($postRequestBody);
         $results = null;
 
-        curl_setopt($curlHandle, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        curl_setopt($curlHandle, CURLOPT_POST, true);
         curl_setopt($curlHandle, CURLOPT_USERPWD, $httpAuthString);
+        curl_setopt($curlHandle, CURLOPT_POSTFIELDS, json_encode($postRequestBody));
+        curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
         curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
 
         $results = $this->handleResults($curlHandle);
