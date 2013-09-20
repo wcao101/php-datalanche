@@ -668,11 +668,6 @@ class DLClient
         return $this->_secret;
     }
 
-    public function getClientUrl()
-    {
-        return $this->_url;
-    }
-
     public function close($curlHandle)
     {
         try {
