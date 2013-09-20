@@ -199,15 +199,19 @@ class DLClient
     * @uses curl_setopt_array() a curl resource which allows the setting of parameters through an array
     */
 
-    private function curlCreator()
+    private function curlCreator($httpAuthString, $postRequestBody, $requestUrl)
     {
         /*
         * WARNING: changing a value in this array will change all related values across request types
         */
         $options = array (
             CURLOPT_HEADER => true,
+            CURLOPT_HTTPHEADER => array('Content-type: application/json'),
+            CURLOPT_URL => $requestUrl,
             CURLOPT_ENCODING => 'gzip',
+            CURLOPT_POST => true,
             CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
+            CURLOPT_USERPWD => $httpAuthString,
             CURLOPT_SSLVERSION => 3,
             CURLOPT_SSL_VERIFYPEER => $this->_verifySsl,
             CURLOPT_SSL_VERIFYHOST => $this->_verifySsl,
@@ -216,7 +220,8 @@ class DLClient
             CURLOPT_VERBOSE => false,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 10,
-            CURLINFO_HEADER_OUT => true
+            CURLINFO_HEADER_OUT => true,
+            CURLOPT_POSTFIELDS => json_encode($postRequestBody)
             );
 
         /**
@@ -399,8 +404,6 @@ class DLClient
             return '/';
         }
 
-        $queryString = null;
-        $queryParameters = $query->getParameters();
         $queryBaseUrl = $query->getUrl();
 
  
@@ -433,15 +436,7 @@ class DLClient
         $postRequestBody = $this->getBody($query);
         $httpAuthString = (string) $key.":".$secret;
         $requestUrl = $this->getUrl($query);
-        $curlHandle = $this->curlCreator();
-        $completeInfoArray = $query->getParameters();
-        $results = null;
-
-        curl_setopt($curlHandle, CURLOPT_POST, true);
-        curl_setopt($curlHandle, CURLOPT_USERPWD, $httpAuthString);
-        curl_setopt($curlHandle, CURLOPT_POSTFIELDS, json_encode($postRequestBody));
-        curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
-        curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
+        $curlHandle = $this->curlCreator($httpAuthString, $postRequestBody, $requestUrl);
 
         $results = $this->handleResults($curlHandle);
 
