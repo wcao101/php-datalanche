@@ -27,9 +27,6 @@ class DLException extends Exception {
         return $this->_response;
     }
 
-    public function dumpContent() {
-        var_dump($this);
-    }
 }
 
 ?>
