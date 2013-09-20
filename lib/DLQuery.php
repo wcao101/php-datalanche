@@ -258,10 +258,5 @@ class DLQuery
     {
         return $this->_parameters;
     }
-
-    public function setUrl($url)
-    {
-        $this->_url = $url;
-    }
 }
 ?>
