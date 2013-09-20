@@ -1,6 +1,5 @@
 <?php
 
-include "../lib/DLClient.php";
 
 class GetTableInfoExample
 {
@@ -10,16 +9,25 @@ class GetTableInfoExample
         $client = new DLClient($secret, $key, $host, $port, $ssl);
         $query = new DLQuery();
         $query->getTableInfo('my_table');
-        $test = $query->getParameters;
 
 
         $results = $client->query($query);
 
-        echo "\n----\n";
-        var_dump($results);
-        echo "\n----\n";
+        echo "----\n";
+        echo "get-table-info:\n";
+            echo "code: ".$results['response']['headers']['http_code']."\n";
+            if($results['response']['headers']['http_code'] === 200)
+            {
+                echo "!! PASS !!\n";
+                echo "----\n";
+                return true;
+            } else {
+                echo "!! FAIL !!\n";
+                echo "----\n";
+                return false;
+            }
     }
 }
 
-$getTableInfoExample = new GetTableInfoExample('VCBA1hLyS2mYdrL6kO/iKQ==','7zNN1Pl9SQ6lNZwYe9mtQw==', 'localhost', 4001, false);
+
 ?>
