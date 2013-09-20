@@ -1,6 +1,5 @@
 <?php
 
-
 class GetTableListExample
 {
     public function __construct($secret, $key, $host, $port, $ssl)
@@ -27,6 +26,7 @@ class GetTableListExample
             }
     }
 }
+
 
 
 ?>
