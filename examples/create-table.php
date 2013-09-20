@@ -1,13 +1,13 @@
 <?php
-include '../lib/client.php';
+include '../lib/DLClient.php';
 
 class CreateTableExample
 {
     public function __construct($secret, $key, $host, $port, $ssl)
     {
         $result = null;
-        $client = new Client($secret, $key, $host, $port, $ssl);
-        $query = new Query();
+        $client = new DLClient($secret, $key, $host, $port, $ssl);
+        $query = new DLQuery();
         $query->createTable('my_table');
         $query->description('my_table description text');
         $query->isPrivate(true);
