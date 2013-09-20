@@ -664,28 +664,14 @@ class DLClient
         $results = null;
         $queryMethodType = $query->getMethodType();
 
-        if(!$query) {
-
+        if ( (!$query)
+            || ($query === null) 
+        ) {
             throw new Exception("Query was null in client->query(), Query must have content.");
             exit();
-        }
-
-        if ($queryMethodType === 'del') {
-
-            $results = $this->clientDelete($query);
-
-        } elseif ($queryMethodType === 'get') {
-
-            $results = $this->clientGet($query);
-
-        } elseif ($queryMethodType === 'post') {
-
-            $results = $this->clientPost($query);
-
         } else {
 
-            throw new Exception("client->query() reported being out of range - [FATAL]");
-            exit();
+             $results = $this->clientPost($query);
         }
 
         return $results;
@@ -700,54 +686,6 @@ class DLClient
         $requestUrl = $this->getUrl($query);
         $curlHandle = $this->curlCreator();
         $completeInfoArray = $query->getParameters();
-        $results = null;
-
-        curl_setopt($curlHandle, CURLOPT_POST, true);
-        curl_setopt($curlHandle, CURLOPT_USERPWD, $httpAuthString);
-        curl_setopt($curlHandle, CURLOPT_POSTFIELDS, json_encode($postRequestBody));
-        curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
-        curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
-
-        $results = $this->handleResults($curlHandle);
-
-        return $results;
-    }
-
-    private function clientGet($query)
-    {
-        $key = $this->_key;
-        $secret = $this->_secret;
-        $httpAuthString = (string) $key.":".$secret;
-        $requestUrl = $this->getUrl($query);
-        $curlHandle = $this->curlCreator();
-        $completeInfoArray = $query->getParameters();
-        $postRequestBody = $this->getBody($query);
-        echo "POST\n";
-        var_dump($postRequestBody);
-        $results = null;
-
-        curl_setopt($curlHandle, CURLOPT_POST, true);
-        curl_setopt($curlHandle, CURLOPT_USERPWD, $httpAuthString);
-        curl_setopt($curlHandle, CURLOPT_POSTFIELDS, json_encode($postRequestBody));
-        curl_setopt($curlHandle, CURLOPT_HTTPHEADER, array('Content-type: application/json'));
-        curl_setopt($curlHandle, CURLOPT_URL, $requestUrl);
-
-        $results = $this->handleResults($curlHandle);
-
-        return $results;
-    }
-
-    private function clientDelete($query)
-    {
-        $key = $this->_key;
-        $secret = $this->_secret;
-        $httpAuthString = (string) $key.":".$secret;
-        $requestUrl = $this->getUrl($query);
-        $curlHandle = $this->curlCreator();
-        $completeInfoArray = $query->getParameters();
-        $postRequestBody = $this->getBody($query);
-        echo "POST\n";
-        var_dump($postRequestBody);
         $results = null;
 
         curl_setopt($curlHandle, CURLOPT_POST, true);
