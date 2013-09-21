@@ -1,8 +1,13 @@
 <?php
 
-class SelectFromExample
-{
-    public function __construct($secret, $key, $host, $port, $ssl)
+require_once(dirname(__FILE__) . '/../Datalanche.php');
+$apiKey = 'your_api_key';
+$apiSecret = 'your_api_secret';
+$host = 'your_host';
+$port = 'wanted_port';
+$ssl = 'verify_ssl';
+
+   function DLSelectFrom($secret, $key, $host, $port, $ssl)
     {
         $results = null;
         $client = new DLClient($secret, $key, $host, $port, $ssl);
@@ -21,23 +26,13 @@ class SelectFromExample
         $query->limit(10);
         $query->total(true);
 
-        $results = $client->query($query);
-
-         echo "----\n";
-         echo "select-from:\n";
-            echo "code: ".$results['response']['headers']['http_code']."\n";
-            if($results['response']['headers']['http_code'] === 200)
-            {
-                echo "!! PASS !!\n";
-                echo "----\n";
-                return true;
-            } else {
-                echo "!! FAIL !!\n";
-                echo "----\n";
-                return false;
-            }
+        try
+        {
+            $results = $client->query($query);
+        } catch (Exception $e) {
+            echo $e."\n";
+        }
     }
-}
-
+DLSelectFrom($apiKey,$apiSecret, $host, $port, $ssl);
 
 ?>

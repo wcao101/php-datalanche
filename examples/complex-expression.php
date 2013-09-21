@@ -2,6 +2,12 @@
 
 require_once(dirname(__FILE__) . '/../Datalanche.php');
 
+$apiKey = 'your_api_key';
+$apiSecret = 'your_api_secret';
+$host = 'your_host';
+$port = 'wanted_port';
+$ssl = 'verify_ssl';
+
     function DLComplexExpression($secret, $key, $host, $port, $ssl)
     {
         $results = null;
@@ -34,6 +40,6 @@ require_once(dirname(__FILE__) . '/../Datalanche.php');
         return new DLExpression();
     }
 
-DLComplexExpression('VCBA1hLyS2mYdrL6kO/iKQ==','7zNN1Pl9SQ6lNZwYe9mtQw==', 'localhost', 4001, false);
+DLComplexExpression($apiKey,$apiSecret, $host, $port, $ssl);
 
 ?>
