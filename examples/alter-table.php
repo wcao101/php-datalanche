@@ -1,8 +1,8 @@
 <?php
 
-class AlterTableExample
-{
-    public function __construct($secret, $key, $host, $port, $ssl)
+require_once(dirname(__FILE__) . '/../Datalanche.php');
+
+    function DLAlterTable($secret, $key, $host, $port, $ssl)
     {
         $client = new DLClient($secret, $key, $host, $port, $ssl);
         $query = new DLQuery();
@@ -37,23 +37,14 @@ class AlterTableExample
         $query->dropColumn('col3');
         $query->alterColumn('col1', array('data_type'=>'string'));
 
-        $results = $client->query($query);
-        echo "----\n";
-        echo "alter-table:\n";
-            echo "code: ".$results['response']['headers']['http_code']."\n";
-            if($results['response']['headers']['http_code'] === 200)
-            {
-                echo "!! PASS !!\n";
-                echo "----\n";
-                return true;
-            } else {
-                echo "!! FAIL !!\n";
-                echo "----\n";
-                return false;
-            }
+        try
+        {
+            $results = $client->query($query);
+        } catch (Exception $e) {
+            echo $e."\n";
+        }
     }
 
-}
 
 
 ?>
