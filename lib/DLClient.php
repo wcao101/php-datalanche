@@ -269,16 +269,15 @@ class DLClient
                 'request' => array (
                     'method' => $curlExecResultArray['request']['header']['operation'],
                     'url' => $curlExecResultArray['curl_info_array']['url'],
-                    'headers' => $curlExecResultArray['request']['header']
+                    'headers' => $curlExecResultArray['request']['header'],
+                    'body' => $curlExecResultArray['request']['header']['url_parameters']
                     ),
-                'body' => $curlExecResultArray['request']['header']['url_parameters'],
                 'response' => array (
                     'http_status' => $curlExecResultArray['response']['header']['http_code'],
                     'http_version' => $curlExecResultArray['request']['header']['http_version'],
                     'headers' => $curlExecResultArray['response']['header']
                     ),
-                'data' => $curlExecResultArray['response']['body'],
-                'curl_info_array' => $curlExecResultArray['curl_info_array']
+                'data' => $curlExecResultArray['response']['body']
             );
 
         return $debugObject;
@@ -448,15 +447,6 @@ class DLClient
                 $statusArray['request']['header'][trim($middle[0])] = trim($middle[1]);
             }
         }
-
-        /* 
-        * Appending the entierty of the curl_get_info
-        * in its untouched, unprocessed version since some
-        * of the info in there might be helpful to debugging
-        * and development
-        */ 
-
-        $statusArray['curl_info_array'] = $curlInfoArray;
 
         return $statusArray;
     }
