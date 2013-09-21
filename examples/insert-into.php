@@ -1,9 +1,8 @@
 <?php
 
+require_once(dirname(__FILE__) . '/../Datalanche.php');
 
-class InsertIntoExample
-{
-    public function __construct($secret, $key, $host, $port, $ssl)
+    function DLInsertInto($secret, $key, $host, $port, $ssl)
     {
         $results = null;
         $client = new DLClient($secret, $key, $host, $port, $ssl);
@@ -27,23 +26,13 @@ class InsertIntoExample
                     'col3' => 'hello world'
                     )
                 ));
-        $results = $client->query($query);
-
-        echo "----\n";
-        echo "insert into:\n";
-            echo "code: ".$results['response']['headers']['http_code']."\n";
-            if($results['response']['headers']['http_code'] === 200)
-            {
-                echo "!! PASS !!\n";
-                echo "----\n";
-                return true;
-            } else {
-                echo "!! FAIL !!\n";
-                echo "----\n";
-                return false;
-            }
+        try
+        {
+            $results = $client->query($query);
+        } catch (Exception $e) {
+            echo $e."\n";
+        }
     }
-}
 
 
 ?>
