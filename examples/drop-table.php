@@ -14,6 +14,7 @@ try {
     $query->dropTable('my_table');
 
     $results = $client->query($query);
+    echo "Operation Drop-Table successful\n";
 
 } catch (DLException $e) {
     echo $e."\n";
