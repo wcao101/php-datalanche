@@ -1,27 +1,23 @@
 <?php
 
 require_once(dirname(__FILE__) . '/../Datalanche.php');
-$apiKey = 'your_api_key';
-$apiSecret = 'your_api_secret';
 
+try{
+    /**
+    * @uses DLClient Add your API secret and API key
+    */
+    $apiKey = 'your_api_key';
+    $apiSecret = 'your_api_secret';
+    $client = new DLClient($apiSecret, $apiKey);
 
+    $query = new DLQuery();
+    $query->getTableList();
 
-$results = null;
-$client = new DLClient($apiSecret, $apiKey);
-$query = new DLQuery();
-$query->getTableList();
-
-
-try
-{
     $results = $client->query($query);
-} catch (Exception $e) {
+} catch (DLException $e) {
     echo $e."\n";
-}
-
-if($results['response']['headers']['http_code'] === 200)
-{
-    echo "SUCCESS!!\n";
+} catch (Exception $ex) {
+    echo $ex."\n";
 }
 
 ?>
