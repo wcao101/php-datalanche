@@ -15,6 +15,8 @@ try {
 
     $results = $client->query($query);
 
+    print_r($results['data']);
+
 } catch (DLException $e) {
     echo $e."\n";
 } catch (Exception $ex) {
