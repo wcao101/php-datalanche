@@ -25,6 +25,8 @@ try {
 
     $results = $client->query($query);
 
+    echo "Operation Delete-From succesful.\n";
+
 } catch (DLException $e) {
     echo $e."\n";
 } catch (Exception $ex) {
