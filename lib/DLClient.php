@@ -188,9 +188,9 @@ class DLClient
     * curl decides to store and read this information.
     *
     * @access private
-    * @return mixed/resource $curlHandle this is the current curl handle, used to formulate and execute requests
-    * @uses curl_init() a curl resource to being a curl connection
-    * @uses curl_setopt_array() a curl resource which allows the setting of parameters through an array
+    * @return mixed/resource $curlHandle The curl handle for session
+    * @uses curl_init() Init a curl connection
+    * @uses curl_setopt_array() Quickly set an array of curl options
     */
 
     private function curlCreator($httpAuthString, $postRequestBody, $requestUrl)

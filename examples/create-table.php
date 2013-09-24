@@ -58,7 +58,6 @@ try {
                 )
             ));
 
-
     $results = $client->query($query);
 
     echo "Operation Create-Table Successful.\n";
