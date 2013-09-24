@@ -2,7 +2,7 @@
 
 require_once(dirname(__FILE__) . '/../Datalanche.php');
 
-try{
+try {
     /**
     * @uses DLClient add your API key and API secret
     */
@@ -59,7 +59,7 @@ try{
         ));
 
     $client->query($query);
-    
+
     echo "Operation Alter-Table Successful.\n";
 
 } catch (DLException $e) {
