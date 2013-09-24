@@ -1,28 +1,37 @@
 <?php
 
 require_once(dirname(__FILE__) . '/../Datalanche.php');
-$apiKey = 'your_api_key';
-$apiSecret = 'your_api_secret';
 
+try {
+    /**
+    * @uses DLClient Add your API key and API secret
+    */
+    $apiKey = 'your_api_key';
+    $apiSecret = 'your_api_secret';
+    $client = new DLClient($apiSecret, $apiKey);
 
-$results = null;
-$client = new DLClient($apiSecret, $apiKey);
-$expression = new DLExpression();
-$expression->column('col3')->equals('hello');
+    $expression = new DLExpression();
+    $expression->column('col3')->equals('hello');
 
-$query = new DLQuery();
-$query->update('my_table');
-$query->set(array('col3' => 'hello world'));
-$query->where($expression);
-try
-{
+    /**
+    * @uses DLQuery::update Only $query->update() is required
+    *
+    * $query->where() is optional however, all rows in the table
+    * will be updated in the specified table if the where clause 
+    * is missing.
+    */
+    $query = new DLQuery();
+    $query->update('my_table');
+    $query->set(array('col3' => 'hello world'));
+    $query->where($expression);
+
     $results = $client->query($query);
-} catch (Exception $e) {
+    echo "Operation Update-Table Successful\n";
+
+} catch (DLException $e) {
     echo $e."\n";
+} catch (Exception $ex) {
+    echo $ex."\n";
 }
 
-if($results['response']['headers']['http_code'] === 200)
-{
-    echo "SUCCESS!!\n";
-}
 ?>
