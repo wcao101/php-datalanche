@@ -38,6 +38,6 @@ try {
 } catch (DLException $e) {
     echo $e."\n";
 } catch (Exception $ex) {
-    echo $e."\n";
+    echo $ex."\n";
 }
 ?>
