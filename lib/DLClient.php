@@ -1,15 +1,5 @@
 <?php
-/*
-* DLClient.php
-* created by: cristian cavalli
-* property of: Datalanche Inc.
-* purpose: allow interaction between php clients and
-* dalanche services
-* target: datalanche
-* operation: parses php native data typers into propreitary
-* json format for datalanche and then mediates responses from
-* datalanche services.
-*/
+
 /* DEPENDICES */
 include 'DLQuery.php';
 include 'DLExpression.php';
@@ -35,13 +25,6 @@ include 'DLException.php';
 * @category     raw PHP/Datalanche
 * @package      datalanche
 * @subpackage   client
-* @copyright    Copyright (c) 2013 Datalanche (https://www.datalanche.com/)
-* @license      https://www.datalanche.com/terms
-* @version      Release: @package_version@
-* @link         https://github.com/datalanche/php-datalanche.git
-* @since        @release_version@
-* @deprecated   still in use
-* //////////////////////////////////////////////////
 */
 
 class DLClient 
@@ -78,14 +61,12 @@ class DLClient
         if(($host === null)
             || ($host === '')
         ) {
-            //If there isn't a custom host, revert to datalanche
             $this->_host = 'api.datalanche.com'; 
         } else {
-            //Otherwise we are using a custom host.
             $this->_host = $host; 
         }
 
-        $url = $url.$host; //Now we'll take the url string and append the host to the end of it.
+        $url = $url.$host;
 
         //Testing to see whether the use has provided a custom port
         if (($port === null)
@@ -113,9 +94,6 @@ class DLClient
             || ($ssl === 1) 
             || ($ssl === 'true')
         ) {
-            /* If verify ssl is null (default value if undeclared) then we default
-            to using secure and verified communications; we do the same if explicitly
-            qualified as true as well. */
             $this->_verifySsl = true;
         }
 
@@ -341,7 +319,6 @@ class DLClient
 
     private function parseCurlResult($serverResponseString, $curlInfoArray)
     {
-        // Unecessary but helpful to demonstrate the basic structure of the return object
         $statusArray = array();
         $statusArray['request'] = array();
         $statusArray['response'] = array();
@@ -357,14 +334,6 @@ class DLClient
 
         array_shift($responseHeader);
 
-        /*
-        * Loop over the rest of the header and explode along the colon.
-        * Take the content before the colon and assign it as a new array key
-        * while taking the content after the colon and assigning it as that key's
-        * value.
-        *
-        * This radically simplifies access to any given part of response or request.
-        */
         foreach($responseHeader as $value)
         {
             $middle = explode(":", $value);
