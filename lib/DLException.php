@@ -6,27 +6,30 @@ class DLException extends Exception {
     private $_request;
     private $_response;
 
-    public function __construct($debugObject) {
-        $this->_code = $debugObject['response']['http_status'];
-        $this->_errorType = $debugObject['body']['name'];
-        $this->_message = $debugObject['body']['message'];
-        $this->_request = $debugObject['request'];
-        $this->_response = $debugObject['response'];
-        $this->_response['body'] = $debugObject['body'];
+    public function __construct($result)
+    {
+        $this->_code = $result['response']['http_status'];
+        $this->_errorType = $result['data']['code'];
+        $this->_message = $result['data']['message'];
+        $this->_request = $result['request'];
+        $this->_response = $result['response'];
+        $this->_response['body'] = $result['data'];
     }
 
-    public function getErrorMessage() {
+    public function getErrorMessage()
+    {
         return $this->_errorType;
     }
 
-    public function getRequest() {
+    public function getRequest()
+    {
         return $this->_request;
     }
 
-    public function getResponse() {
+    public function getResponse()
+    {
         return $this->_response;
     }
-
 }
 
 ?>

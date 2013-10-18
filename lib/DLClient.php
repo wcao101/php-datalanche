@@ -1,303 +1,122 @@
 <?php
 
-/* DEPENDICES */
 include 'DLQuery.php';
 include 'DLExpression.php';
 include 'DLException.php';
 
-
-/**
-* \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-* Class DLClient contains the overwhelming amount of functionality
-* regarding connection creation, control and closure.
-* DLC client does post and get parsing for provided input.
-* Post bodies are formatted using json_encode functionality while
-* get parameters are serialzed into a url string using basic
-* associative encoding procedure. Upon instantiation of a 
-* new DLClient automatic execution procedure (__construct) 
-* expects several set-up inputs for succesful client configuration. 
-* Specifically: your api sercret, api key, desired host, 
-* port, and whether or not you would like to strictly use secure (https)
-* connections for interacting with the specified host. 
-* Disabling '$_verifySsl' (that is setting it to false or null)
-* is ideal for development procedures or self-signed certs.
-*
-* @category     raw PHP/Datalanche
-* @package      datalanche
-* @subpackage   client
-*/
-
 class DLClient 
 {
-    private $_parameters;
-    private $_key;
-    private $_secret;
+    private $_authKey;
+    private $_authSecret;
     private $_url;
     private $_verifySsl;
-    private $_connection;
-    private $_host;
 
-    /**
-    * Inital execution construct for client class.
-    * Configures and parses basic varaible submission
-    * for the set-up of client <-> database interaction.
-    *
-    * @access public
-    * @param string $secret
-    * @param string $key
-    * @param string $host
-    * @param string|int $port
-    * @param bool|string $ssl
-    * @return mixed/object return $this or this object upon completion
-    */
-    public function __construct ($secret, $key, $host, $port, $ssl)
+    public function __construct($key, $secret, $host, $port, $verifySsl)
     {
-        /*BASIC ASSIGNMENTS*/
-        $url = 'https://';  //Preface the url string with the intended protocol.
+        $this->_authKey = '';
+        $this->_authSecret = '';
+        $this->_url = 'https://api.datalanche.com';
+        $this->_verifySsl = $verifySsl;
 
-        /* BEGIN BASIC LOGIC TO DETERMINE ARGUMEENTS*/
-
-        //Testing for whether a custom host was provided
-        if(($host === null)
-            || ($host === '')
-        ) {
-            $this->_host = 'api.datalanche.com'; 
-        } else {
-            $this->_host = $host; 
+        if ($host != NULL) {
+            $this->_url = 'https://' . host;
         }
 
-        $url = $url.$host;
-
-        //Testing to see whether the use has provided a custom port
-        if (($port === null)
-            || ($port === '')
-        ) {
-            //If there is no provided port, default to settings used by Datalanche
-            $this->_port = null; 
-        } else {
-            //Otherwise get the port and make the needed modification to the url string
-            $this->_port = $port; 
-            $url = $url.':'.$port;
+        if ($port != NULL) {
+            $this->_url .= ':' . $port;
         }
 
-        //Now we have the full base url, so we can go ahead and assign it to the object.
-        $this->_url = $url;
-
-        //Checking to make sure to verify ssl certs.
-        if (($ssl === false)
-            || ($ssl === 0)
-            || ($ssl === 'false')
-        ) {
-            $this->_verifySsl = false;
-        } elseif(($ssl === null)
-            || ($ssl === true) 
-            || ($ssl === 1) 
-            || ($ssl === 'true')
-        ) {
-            $this->_verifySsl = true;
+        if ($key != NULL) {
+            $this->_authKey = $key;
         }
 
-        if($secret != null) {
-            $this->_secret = $secret; 
-        }
-        if ($key != null) {
-            $this->_key = $key;
+        if ($secret != NULL) {
+            $this->_authSecret = $secret; 
         }
 
         return $this;
     }
 
-    public function close($curlHandle)
+    public function key($key) 
     {
-        $close = curl_close($curlHandle);
-        return(true);
+        $this->_authKey = $key;
     }
 
-    public function getKey()
+    public function secret($secret) 
     {
-        return $this->_key;
-    }
-
-    public function getSecret()
-    {
-        return $this->_secret;
-    }
-
-    public function setKey($key) 
-    {
-
-        $this->_key = $key;
-
-        if( (isset($this->_key)) 
-            && ($this->_key === $key)
-        ) {
-
-            return true;
-
-        } else {
-
-            return false;
-        }
-    }
-
-    public function setSecret($secret) 
-    {
-
         $this->_secret = $secret;
-
-        if( (isset($this->_secret)) 
-            && ($this->_secret === $secret)
-        ) {
-
-            return true;
-
-        } else {
-
-            return false;
-        }
     }
 
-    /**
-    * curlCreator is a functionalization of basic curl
-    * params which are consistent across request types -
-    * (get/post/[get]delete). From the programs last major version iteration
-    * curl construction templates have been changed to include header request
-    * and response info, necessitating further functionality to parse how
-    * curl decides to store and read this information.
-    *
-    * @access private
-    * @return mixed/resource $curlHandle The curl handle for session
-    * @uses curl_init() Init a curl connection
-    * @uses curl_setopt_array() Quickly set an array of curl options
-    */
-
-    private function curlCreator($httpAuthString, $postRequestBody, $requestUrl)
+    public function query($query)
     {
-        /*
-        * WARNING: changing a value in this array will change all related values across request types
-        */
-        $options = array (
-            CURLOPT_HEADER => true,
-            CURLOPT_HTTPHEADER => array('Content-type: application/json'),
-            CURLOPT_URL => $requestUrl,
-            CURLOPT_ENCODING => 'gzip',
-            CURLOPT_POST => true,
-            CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
-            CURLOPT_USERPWD => $httpAuthString,
-            CURLOPT_SSLVERSION => 3,
-            CURLOPT_SSL_VERIFYPEER => $this->_verifySsl,
-            CURLOPT_SSL_VERIFYHOST => $this->_verifySsl,
-            CURLOPT_FORBID_REUSE => false,
-            CURLOPT_USERAGENT => 'Datalanche PHP Client',
-            CURLOPT_VERBOSE => false,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CONNECTTIMEOUT => 10,
+        if ($query === NULL) {
+            throw new Exception('$query = NULL');
+        }
+
+        $url = $this->_url . $query->getUrl();
+        $body = $query->getParams();
+        $connection = curl_init();
+
+        $options = array(
             CURLINFO_HEADER_OUT => true,
-            CURLOPT_POSTFIELDS => json_encode($postRequestBody)
-            );
+            CURLOPT_CONNECTTIMEOUT => 10, // seconds
+            CURLOPT_ENCODING => 'gzip',
+            CURLOPT_FORBID_REUSE => false,
+            CURLOPT_HEADER => true,
+            CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
+            CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($body),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSLVERSION => 3,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_SSL_VERIFYPEER => $this->_verifySsl,
+            CURLOPT_URL => $url,
+            CURLOPT_USERAGENT => 'Datalanche PHP Client',
+            CURLOPT_USERPWD => $this->_authKey . ':' . $this->_authSecret,
+            CURLOPT_VERBOSE => false
+        );
+        curl_setopt($connection, $options);
 
-        /**
-        * @var resource/curl contains the curl handle
-        */
-        $curlHandle = curl_init();
-        
-        //MUST USE setopt_array if array!
-        curl_setopt_array($curlHandle, $options);
+        $curlResult = curl_exec($connection);
+        $curlError = curl_error($connection);
+        $curlInfo = curl_getinfo($connection);
+        curl_close($connection);
 
-        return $curlHandle;
-    }
-
-    private function clientPost($query)
-    {
-        $key = $this->_key;
-        $secret = $this->_secret;
-        $postRequestBody = $this->getBody($query);
-        $httpAuthString = (string) $key.":".$secret;
-        $requestUrl = $this->getUrl($query);
-        $curlHandle = $this->curlCreator($httpAuthString, $postRequestBody, $requestUrl);
-
-        $results = $this->handleResults($curlHandle);
-
-        return $results;
-    }
-
-    private function getBody($query)
-    {
-        
-        $queryParameters = $query->getParameters();
-        $queryBaseUrl = $query->getUrl();
-        $postRequestBody = array();
-
-        if(($query === null)) {
-            throw new Exception("The query for function getBody() was null\n");
-        } else {
-            if( (count($queryParameters) === 0))
-            {
-                return new stdClass();
-            }
-            return $queryParameters;
-        }
-    }
-
-    private function getDebugInfo($curlInfo, $curlExecResult)
-    {
-        $curlExecResultArray = $this->parseCurlResult($curlExecResult, $curlInfo);
-        
-        $debugObject = array(
-                'request' => array (
-                    'method' => $curlExecResultArray['request']['header']['operation'],
-                    'url' => $curlExecResultArray['curl_info_array']['url'],
-                    'headers' => $curlExecResultArray['request']['header'],
-                    'body' => $curlExecResultArray['request']['header']['url_parameters']
-                    ),
-                'response' => array (
-                    'http_status' => $curlExecResultArray['response']['header']['http_code'],
-                    'http_version' => $curlExecResultArray['request']['header']['http_version'],
-                    'headers' => $curlExecResultArray['response']['header']
-                    ),
-                'data' => $curlExecResultArray['response']['body']
-            );
-
-        return $debugObject;
-    }
-
-    private function getUrl($query)
-    {
-        if($query === null) {
-
-            return '/';
+        if ($curlResult === false) {
+            throw new Exception('cURL error: ' . $curlError);
         }
 
-        $queryBaseUrl = $query->getUrl();
+        $result = $this->parseResult($curlInfo, $curlResult);
+        $httpStatus = $result['response']['http_status'];
 
- 
-        $queryBaseUrl = $this->_url.$queryBaseUrl;     
+        if ($httpStatus < 200 || $httpStatus > 300) {
+            throw new DLException($result);
+        }
 
-        return $queryBaseUrl;
+        return $result;
     }
 
-    private function handleResults($curlHandle)
+    private function parseResult($curlInfo, $curlResult)
     {
-        //handle results gets curl handle, executes it, and
-        //then returns pertinant results about the interaction
-        $curlExecResult = null; //variable for curl execution handle
-        $curlInfo = null;
-        $responseObject = null;
+        $curlResult = $this->parseCurlResult($curlInfo, $curlResult);
+        
+        $result = array(
+            'request' => array(
+                'method' => $curlResult['request']['header']['operation'],
+                'url' => $curlResult['curl_info_array']['url'],
+                'headers' => $curlResult['request']['header'],
+                'body' => $curlResult['request']['header']['url_parameters']
+            ),
+            'response' => array(
+                'http_status' => $curlResult['response']['header']['http_code'],
+                'http_version' => $curlResult['request']['header']['http_version'],
+                'headers' => $curlResult['response']['header']
+            ),
+            'data' => $curlResult['response']['body']
+        );
 
-        $curlExecResult = curl_exec($curlHandle); // now actually making the only outside call  
-        $curlInfo = curl_getinfo($curlHandle);
-        $this->close($curlHandle);
-
-        $responseObject = $this->getDebugInfo($curlInfo, $curlExecResult);
-
-
-            if(($curlInfo['http_code'] < 200)
-                || ($curlInfo['http_code'] > 300)
-            ) {
-                throw new DLException($responseObject);
-            }
-
-        return($responseObject);
+        return $result;
     }
 
     /**
@@ -310,14 +129,13 @@ class DLClient
     * check which is used to throw specific errors at the json_decode level.
     *
     * @access private
-    * @param string $serverResponseString the results of $this->handleResults(curl_exec($curlHandle)) [the response of the server to the request]
-    * @param array $curlInfoArray the results of $this->handleResults(curl_get_info($curlHandle)) POST execution of the handle
+    * @param string $curlResult the results of $this->handleResults(curl_exec($curlHandle)) [the response of the server to the request]
+    * @param array $curlInfo the results of $this->handleResults(curl_get_info($curlHandle)) POST execution of the handle
     * @uses json_decode() the only place in client where this function is called and checked for errors
     * @uses json_last_error() part of a switch which throws specific json errors
     * @return array $statusArray is an array of arrays contating info about the curl response & request
     */
-
-    private function parseCurlResult($serverResponseString, $curlInfoArray)
+    private function parseCurlResult($curlInfo, $curlResult)
     {
         $statusArray = array();
         $statusArray['request'] = array();
@@ -327,18 +145,16 @@ class DLClient
         $statusArray['response']['body'] = array();
 
         //Seperate the header from the body in the return string and store both
-        $responseHeader = substr($serverResponseString, 0, $curlInfoArray['header_size']);
-        $responseBody = substr($serverResponseString, $curlInfoArray['header_size']);
+        $responseHeader = substr($curlResult, 0, $curlInfo['header_size']);
+        $responseBody = substr($curlResult, $curlInfo['header_size']);
         $responseHeader = explode("\n", $responseHeader);
         $statusArray['response']['header']['status'] = $responseHeader[0];
 
         array_shift($responseHeader);
 
-        foreach($responseHeader as $value)
-        {
+        foreach ($responseHeader as $value) {
             $middle = explode(":", $value);
-            if(count($middle) <= 1)
-            {
+            if (count($middle) <= 1) {
                 /*
                 * The explode function has returned an empty row result
                 * which means that the current slot is porbably part of
@@ -347,8 +163,7 @@ class DLClient
                 * Therefore skip appending it to the content array
                 * and move to the next value slot.
                 */
-            }else{
-
+            } else {
                 $statusArray['response']['header'][trim($middle[0])] = trim($middle[1]);
             }
         }
@@ -363,7 +178,7 @@ class DLClient
         * this helps to isolate specific errors with
         * json responses from the server.
         */
-        switch( json_last_error() ) {
+        switch (json_last_error()) {
             case JSON_ERROR_DEPTH:
                 throw new Exception('JSON error: Maximum stack depth has been exceeded');
                 break;
@@ -383,13 +198,14 @@ class DLClient
             case JSON_ERROR_UTF8:
                 throw new Exception('JSON error: Malformed UTF-8 charachters, possibly incorrectly encoded');
                 break;
+
             case JSON_ERROR_NONE:
             default:
                 break;
         }
 
         $statusArray['response']['body'] = $responseBody;
-        $statusArray['response']['header']['http_code'] = $curlInfoArray['http_code'];
+        $statusArray['response']['header']['http_code'] = $curlInfo['http_code'];
 
         /*
         * We move to do the same process again but this time on the request headers
@@ -397,7 +213,7 @@ class DLClient
         * process is a bit shorter.
         */
 
-        $requestHeader = explode("\n", $curlInfoArray['request_header']);
+        $requestHeader = explode("\n", $curlInfo['request_header']);
         $statusArray['request']['header']['operation'] = explode(" ", $requestHeader[0]);
         $statusArray['request']['header']['url_parameters'] = $statusArray['request']['header']['operation'][1];
         $statusArray['request']['header']['http_version'] = $statusArray['request']['header']['operation'][2];
@@ -405,39 +221,18 @@ class DLClient
 
         array_shift($requestHeader);
 
-        foreach($requestHeader as $value)
-        {
-            $middle = explode(":", $value);
-            if(count($middle) <= 1)
-            {
-                //the explode function has created a white-space entry
-            }else{
+        foreach($requestHeader as $value) {
 
+            $middle = explode(":", $value);
+            if (count($middle) <= 1) {
+                //the explode function has created a white-space entry
+            } else {
                 $statusArray['request']['header'][trim($middle[0])] = trim($middle[1]);
             }
         }
 
         return $statusArray;
     }
-
-    public function query($query)
-    {
-        $results = null;
-
-        if ( (!$query)
-            || ($query === null) 
-        ) {
-            throw new Exception("Query was null in client->query(), Query must have content.");
-        } else {
-
-             $results = $this->clientPost($query);
-        }
-
-        return $results;
-    }
-
-
-
 }
 
 ?>
