@@ -1,7 +1,6 @@
 <?php
 
 include 'DLQuery.php';
-include 'DLExpression.php';
 include 'DLException.php';
 
 class DLClient 
