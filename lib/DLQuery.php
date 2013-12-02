@@ -14,13 +14,162 @@ class DLQuery
     }
 
     //
-    // ALTER TABLE
+    // HELPERS
     //
 
-    public function alterTable($tableName)
+    public function getUrl()
     {
-        $this->_url = '/alter_table';
-        $this->_params['table_name'] = $tableName;
+        return $this->_url;
+    }
+
+    public function getParams()
+    {
+        return $this->_params;
+    }
+
+    //
+    // COMMON
+    //
+
+    public function cascade($boolean)
+    {
+        $this->_params['cascade'] = $boolean;
+
+        return $this; // method chaining
+    }
+
+    public function columns($columns)
+    {
+        $this->_params['columns'] = $columns;
+
+        return $this; // method chaining
+    }
+
+    public function database($databaseName)
+    {
+        $this->_params['database'] = $databaseName;
+
+        return $this; // method chaining
+    }
+
+    public function description($text)
+    {
+        $this->_params['description'] = $text;
+
+        return $this; // method chaining
+    }
+
+    public function renameTo($tableName)
+    {
+        $this->_params['rename_to'] = $tableName;
+
+        return $this; // method chaining
+    }
+
+    public function where($expression)
+    {
+        $this->_params['where'] = $expression;        
+
+        return $this; // method chaining
+    }
+
+    //
+    // EXPRESSIONS
+    //
+
+    //
+    // usage examples
+    //
+    // q->expr(2, "+", 2)
+    // q->expr("~", 2)
+    // q->expr(2, "!")
+    // q->expr(q->column("c1"), "$like", "%abc%")
+    // q->expr(q->column("c1"), "$not", "$in", [1, 2, 3, 4])
+    // q->expr(q->column("c1"), "=", 1, "$and", q->column("c2"), "=", 2)
+    //
+    public function expr()
+    {
+        return array('$expr' => func_get_args());
+    }
+
+    public function alias($aliasName)
+    {
+        return array('$alias' => $aliasName);
+    }
+
+    public function column($columnName)
+    {
+        return array('$column' => $columnName);
+    }
+
+    public function literal($value)
+    {
+        return array('$literal' => $value);
+    }
+
+    public function table($tableName)
+    {
+        return array('$table' => $tableName);
+    }
+
+    //
+    // FUNCTIONS
+    //
+
+    //
+    // usage examples
+    //
+    // q->func("$count", "*")
+    // q->func("$sum", q->column("c1"))
+    //
+    public function func()
+    {
+        return array('$function' => func_get_args());
+    }
+
+    public function avg()
+    {
+        $args = array('$avg');
+        $args = array_merge($args, func_get_args());
+        return array('$function' => $args);
+    }
+
+    public function count()
+    {
+        $args = array('$count');
+        $args = array_merge($args, func_get_args());
+        return array('$function' => $args);
+    }
+
+    public function max()
+    {
+        $args = array('$max');
+        $args = array_merge($args, func_get_args());
+        return array('$function' => $args);
+    }
+
+    public function min()
+    {
+        $args = array('$min');
+        $args = array_merge($args, func_get_args());
+        return array('$function' => $args);
+    }
+
+    public function sum()
+    {
+        $args = array('$sum');
+        $args = array_merge($args, func_get_args());
+        return array('$function' => $args);
+    }
+
+    //
+    // ALTER DATABASE
+    //
+
+    public function alterDatabase($databaseName)
+    {
+        $this->_url = '/alter_database';
+        $this->_params['database'] = $databaseName;
 
         return $this; // method chaining
     }
@@ -35,59 +184,12 @@ class DLQuery
         return $this; // method chaining
     }
 
-    public function addColumn($columnName, $attributes)
-    {
-        if (array_key_exists('add_columns', $this->_params) === false) {
-            $this->_params['add_columns'] = new stdClass();
-        }
-        $this->_params['add_columns']->$columnName = $attributes;
-
-        return $this; // method chaining
-    }
-
-    public function addSource($sourceName, $attributes)
-    {
-        if (array_key_exists('add_sources', $this->_params) === false) {
-            $this->_params['add_sources'] = new stdClass();
-        }
-        $this->_params['add_sources']->$sourceName = $attributes;
-
-        return $this; // method chaining
-    }
-
     public function alterCollaborator($username, $permission)
     {
         if (array_key_exists('alter_collaborators', $this->_params) === false) {
             $this->_params['alter_collaborators'] = new stdClass();
         }
         $this->_params['alter_collaborators']->$username = $permission;
-
-        return $this; // method chaining
-    }
-
-    public function alterColumn($columnName, $attributes)
-    {
-        if (array_key_exists('alter_columns', $this->_params) === false) {
-            $this->_params['alter_columns'] = new stdClass();
-        }
-        $this->_params['alter_columns']->$columnName = $attributes;
-
-        return $this; // method chaining
-    }
-
-    public function alterSource($sourceName, $attributes)
-    {
-        if (array_key_exists('alter_sources', $this->_params) === false) {
-            $this->_params['alter_sources'] = new stdClass();
-        }
-        $this->_params['alter_sources']->$sourceName = $attributes;
-
-        return $this; // method chaining
-    }
-
-    public function description($text)
-    {
-        $this->_params['description'] = $text;
 
         return $this; // method chaining
     }
@@ -102,6 +204,71 @@ class DLQuery
         return $this; // method chaining
     }
 
+    public function isPrivate($boolean)
+    {
+        $this->_params['is_private'] = $boolean;
+
+        return $this; // method chaining
+    }
+
+    //
+    // ALTER INDEX
+    //
+
+    public function alterIndex($indexName)
+    {
+        $this->_url = '/alter_index';
+        $this->_params['index_name'] = $indexName;
+
+        return $this; // method chaining
+    }
+
+    //
+    // ALTER SCHEMA
+    //
+
+    public function alterSchema($schemaName)
+    {
+        $this->_url = '/alter_schema';
+        $this->_params['schema_name'] = $schemaName;
+
+        return $this; // method chaining
+    }
+
+    //
+    // ALTER TABLE
+    //
+
+    public function alterTable($tableName)
+    {
+        $this->_url = '/alter_table';
+        $this->_params['table_name'] = $tableName;
+
+        return $this; // method chaining
+    }
+
+    public function addColumn($columnName, $attributes)
+    {
+        if (array_key_exists('add_columns', $this->_params) === false) {
+            $this->_params['add_columns'] = new stdClass();
+        }
+        $this->_params['add_columns']->$columnName = $attributes;
+
+        return $this; // method chaining
+    }
+
+    // TODO: addConstraint
+
+    public function alterColumn($columnName, $attributes)
+    {
+        if (array_key_exists('alter_columns', $this->_params) === false) {
+            $this->_params['alter_columns'] = new stdClass();
+        }
+        $this->_params['alter_columns']->$columnName = $attributes;
+
+        return $this; // method chaining
+    }
+
     public function dropColumn($columnName)
     {
         if (array_key_exists('drop_columns', $this->_params) === false) {
@@ -112,29 +279,7 @@ class DLQuery
         return $this; // method chaining
     }
 
-    public function dropSource($sourceName)
-    {
-        if (array_key_exists('drop_sources', $this->_params) === false) {
-            $this->_params['drop_sources'] = array();
-        }
-        array_push($this->_params['drop_sources'], $sourceName);
-
-        return $this; // method chaining
-    }
-
-    public function isPrivate($boolean)
-    {
-        $this->_params['is_private'] = $boolean;
-
-        return $this; // method chaining
-    }
-
-    public function license($attributes)
-    {
-        $this->_params['license'] = $attributes;
-
-        return $this; // method chaining
-    }
+    // TODO: dropConstraint
 
     public function renameColumn($columnName, $newName)
     {
@@ -146,22 +291,7 @@ class DLQuery
         return $this; // method chaining
     }
 
-    public function renameSource($sourceName, $newName)
-    {
-        if (array_key_exists('rename_sources', $this->_params) === false) {
-            $this->_params['rename_sources'] = new stdClass();
-        }
-        $this->_params['rename_sources']->$sourceName = $newName;
-
-        return $this; // method chaining
-    }
-
-    public function renameTo($tableName)
-    {
-        $this->_params['rename_to'] = $tableName;
-
-        return $this; // method chaining
-    }
+    // TODO: dropConstraint
 
     public function setSchema($schemaName)
     {
@@ -171,16 +301,63 @@ class DLQuery
     }
 
     //
-    // CREATE TABLE
+    // CREATE INDEX
     //
 
-    public function createTable($definition)
+    public function createIndex($indexName)
     {
-        $this->_url = '/create_table';
-        $this->_params = $definition;
+        $this->_url = '/create_index';
+        $this->_params['index_name'] = $indexName;
 
         return $this; // method chaining
     }
+
+    public function isUnique($boolean)
+    {
+        $this->_params['is_unique'] = $boolean;
+
+        return $this; // method chaining
+    }
+
+    public function method($text)
+    {
+        $this->_params['method'] = $text;
+
+        return $this; // method chaining
+    }
+
+    public function onTable($tableName)
+    {
+        $this->_params['table_name'] = $tableName;
+
+        return $this; // method chaining
+    }
+
+    //
+    // CREATE SCHEMA
+    //
+
+    public function createSchema($schemaName)
+    {
+        $this->_url = '/create_schema';
+        $this->_params['schema_name'] = $schemaName;
+
+        return $this; // method chaining
+    }
+
+    //
+    // CREATE TABLE
+    //
+
+    public function createTable($tableName)
+    {
+        $this->_url = '/create_table';
+        $this->_params['table_name'] = $tableName;
+
+        return $this; // method chaining
+    }
+
+    // TODO: constraints
 
     //
     // DELETE
@@ -194,7 +371,65 @@ class DLQuery
         return $this; // method chaining
     }
 
-    // where() defined below
+    //
+    // DESCRIBE DATABASE
+    //
+
+    public function describeDatabase($databaseName)
+    {
+        $this->_url = '/describe_database';
+        $this->_params['database'] = $databaseName;
+
+        return $this; // method chaining
+    }
+
+    //
+    // DESCRIBE SCHEMA
+    //
+
+    public function describeSchema($schemaName)
+    {
+        $this->_url = '/describe_schema';
+        $this->_params['schema_name'] = $schemaName;
+
+        return $this; // method chaining
+    }
+
+    //
+    // DESCRIBE TABLE
+    //
+
+    public function describeTable($tableName)
+    {
+        $this->_url = '/describe_table';
+        $this->_params['table_name'] = $tableName;
+
+        return $this; // method chaining
+    }
+
+    //
+    // DROP INDEX
+    //
+
+    public function dropIndex($indexName)
+    {
+        $this->_url = '/drop_index';
+        $this->_params['index_name'] = $indexName;
+
+        return $this; // method chaining
+    }
+
+    //
+    // DROP SCHEMA
+    //
+
+    public function dropSchema($schemaName)
+    {
+        $this->_url = '/drop_schema';
+        $this->_params['schema_name'] = $schemaName;
+
+        return $this; // method chaining
+    }
 
     //
     // DROP TABLE
@@ -204,29 +439,6 @@ class DLQuery
     {
         $this->_url = '/drop_table';
         $this->_params['table_name'] = $tableName;
-
-        return $this; // method chaining
-    }
-
-    //
-    // GET TABLE INFO
-    //
-
-    public function getTableInfo($tableName)
-    {
-        $this->_url = '/get_table_info';
-        $this->_params['table_name'] = $tableName;
-
-        return $this; // method chaining
-    }
-
-    //
-    // GET TABLE LIST
-    //
-
-    public function getTableList()
-    {
-        $this->_url = '/get_table_list';
 
         return $this; // method chaining
     }
@@ -283,6 +495,13 @@ class DLQuery
         return $this; // method chaining
     }
 
+    public function having($expression)
+    {
+        $this->_params['having'] = $expression;
+
+        return $this; // method chaining
+    }
+
     public function limit($integer)
     {
         $this->_params['limit'] = $integer;
@@ -304,14 +523,45 @@ class DLQuery
         return $this; // method chaining
     }
 
-    public function total($boolean)
+    public function search($queryText)
     {
-        $this->_params['total'] = $boolean;
+        $this->_params['search'] = $queryText;
 
         return $this; // method chaining
     }
 
-    // where() defined below
+    //
+    // SHOW DATABASES
+    //
+
+    public function showDatabases()
+    {
+        $this->_url = '/show_databases';
+
+        return $this; // method chaining
+    }
+
+    //
+    // SHOW SCHEMAS
+    //
+
+    public function showSchemas()
+    {
+        $this->_url = '/show_schemas';
+
+        return $this; // method chaining
+    }
+
+    //
+    // SHOW TABLES
+    //
+
+    public function showTables()
+    {
+        $this->_url = '/show_tables';
+
+        return $this; // method chaining
+    }
 
     //
     // UPDATE
@@ -330,57 +580,6 @@ class DLQuery
         $this->_params['set'] = $map;
 
         return $this; // method chaining
-    }
-
-    // where() defined below
-
-    //
-    // COMMON CLAUSES
-    //
-
-    public function where($expression)
-    {
-        $this->_params['where'] = $expression;        
-
-        return $this; // method chaining
-    }
-
-    //
-    // HELPERS
-    //
-
-    public function getUrl()
-    {
-        return $this->_url;
-    }
-
-    public function getParams()
-    {
-        return $this->_params;
-    }
-
-    //
-    // EXPRESSIONS
-    //
-
-    public function column($columnName)
-    {
-        return array('$column' => $columnName);
-    }
-
-    //
-    // usage examples
-    //
-    // q->expr(2, "$+", 2)
-    // q->expr("$~", 2)
-    // q->expr(2, "$!")
-    // q->expr(q->column("c1"), "$like", "%abc%")
-    // q->expr(q->column("c1"), "$not", "$in", [1, 2, 3, 4])
-    // q->expr(q->column("c1"), "$=", 1, "$and", q->column("c2"), "$=", 2)
-    //
-    public function expr()
-    {
-        return array('$expr' => func_get_args());
     }
 }
 
