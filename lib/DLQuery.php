@@ -5,10 +5,14 @@ class DLQuery
     private $_url;
     private $_params;
 
-    public function __construct()
+    public function __construct($databaseName)
     {
         $this->_url = '/';
         $this->_params = array();
+
+        if ($databaseName != NULL) {
+            $this->_params['database'] = $databaseName;
+        }
 
         return $this; // method chaining
     }
@@ -41,13 +45,6 @@ class DLQuery
     public function columns($columns)
     {
         $this->_params['columns'] = $columns;
-
-        return $this; // method chaining
-    }
-
-    public function database($databaseName)
-    {
-        $this->_params['database'] = $databaseName;
 
         return $this; // method chaining
     }
@@ -312,13 +309,6 @@ class DLQuery
         return $this; // method chaining
     }
 
-    public function isUnique($boolean)
-    {
-        $this->_params['is_unique'] = $boolean;
-
-        return $this; // method chaining
-    }
-
     public function method($text)
     {
         $this->_params['method'] = $text;
@@ -329,6 +319,13 @@ class DLQuery
     public function onTable($tableName)
     {
         $this->_params['table_name'] = $tableName;
+
+        return $this; // method chaining
+    }
+
+    public function unique($boolean)
+    {
+        $this->_params['is_unique'] = $boolean;
 
         return $this; // method chaining
     }
