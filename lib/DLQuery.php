@@ -2,29 +2,20 @@
 
 class DLQuery
 {
-    private $_url;
     private $_params;
 
     public function __construct($databaseName)
     {
-        $this->_url = '/';
         $this->_params = array();
-
         if ($databaseName != NULL) {
             $this->_params['database'] = $databaseName;
         }
-
         return $this; // method chaining
     }
 
     //
     // HELPERS
     //
-
-    public function getUrl()
-    {
-        return $this->_url;
-    }
 
     public function getParams()
     {
@@ -38,35 +29,30 @@ class DLQuery
     public function cascade($boolean)
     {
         $this->_params['cascade'] = $boolean;
-
         return $this; // method chaining
     }
 
     public function columns($columns)
     {
         $this->_params['columns'] = $columns;
-
         return $this; // method chaining
     }
 
     public function description($text)
     {
         $this->_params['description'] = $text;
-
         return $this; // method chaining
     }
 
     public function renameTo($tableName)
     {
         $this->_params['rename_to'] = $tableName;
-
         return $this; // method chaining
     }
 
     public function where($expression)
     {
         $this->_params['where'] = $expression;        
-
         return $this; // method chaining
     }
 
@@ -165,9 +151,7 @@ class DLQuery
 
     public function alterDatabase($databaseName)
     {
-        $this->_url = '/alter_database';
-        $this->_params['database'] = $databaseName;
-
+        $this->_params['alter_database'] = $databaseName;
         return $this; // method chaining
     }
 
@@ -204,7 +188,6 @@ class DLQuery
     public function isPrivate($boolean)
     {
         $this->_params['is_private'] = $boolean;
-
         return $this; // method chaining
     }
 
@@ -214,9 +197,7 @@ class DLQuery
 
     public function alterIndex($indexName)
     {
-        $this->_url = '/alter_index';
-        $this->_params['index_name'] = $indexName;
-
+        $this->_params['alter_index'] = $indexName;
         return $this; // method chaining
     }
 
@@ -226,9 +207,7 @@ class DLQuery
 
     public function alterSchema($schemaName)
     {
-        $this->_url = '/alter_schema';
-        $this->_params['schema_name'] = $schemaName;
-
+        $this->_params['alter_schema'] = $schemaName;
         return $this; // method chaining
     }
 
@@ -238,9 +217,7 @@ class DLQuery
 
     public function alterTable($tableName)
     {
-        $this->_url = '/alter_table';
-        $this->_params['table_name'] = $tableName;
-
+        $this->_params['alter_table'] = $tableName;
         return $this; // method chaining
     }
 
@@ -293,7 +270,6 @@ class DLQuery
     public function setSchema($schemaName)
     {
         $this->_params['set_schema'] = $schemaName;
-
         return $this; // method chaining
     }
 
@@ -303,30 +279,25 @@ class DLQuery
 
     public function createIndex($indexName)
     {
-        $this->_url = '/create_index';
-        $this->_params['index_name'] = $indexName;
-
+        $this->_params['create_index'] = $indexName;
         return $this; // method chaining
     }
 
     public function method($text)
     {
         $this->_params['method'] = $text;
-
         return $this; // method chaining
     }
 
     public function onTable($tableName)
     {
-        $this->_params['table_name'] = $tableName;
-
+        $this->_params['on_table'] = $tableName;
         return $this; // method chaining
     }
 
     public function unique($boolean)
     {
-        $this->_params['is_unique'] = $boolean;
-
+        $this->_params['unique'] = $boolean;
         return $this; // method chaining
     }
 
@@ -336,9 +307,7 @@ class DLQuery
 
     public function createSchema($schemaName)
     {
-        $this->_url = '/create_schema';
-        $this->_params['schema_name'] = $schemaName;
-
+        $this->_params['create_schema'] = $schemaName;
         return $this; // method chaining
     }
 
@@ -348,9 +317,7 @@ class DLQuery
 
     public function createTable($tableName)
     {
-        $this->_url = '/create_table';
-        $this->_params['table_name'] = $tableName;
-
+        $this->_params['create_table'] = $tableName;
         return $this; // method chaining
     }
 
@@ -362,9 +329,7 @@ class DLQuery
 
     public function deleteFrom($tableName)
     {
-        $this->_url = '/delete';
-        $this->_params['table_name'] = $tableName;
-
+        $this->_params['delete_from'] = $tableName;
         return $this; // method chaining
     }
 
@@ -374,9 +339,7 @@ class DLQuery
 
     public function describeDatabase($databaseName)
     {
-        $this->_url = '/describe_database';
-        $this->_params['database'] = $databaseName;
-
+        $this->_params['describe_database'] = $databaseName;
         return $this; // method chaining
     }
 
@@ -386,9 +349,7 @@ class DLQuery
 
     public function describeSchema($schemaName)
     {
-        $this->_url = '/describe_schema';
-        $this->_params['schema_name'] = $schemaName;
-
+        $this->_params['describe_schema'] = $schemaName;
         return $this; // method chaining
     }
 
@@ -398,9 +359,7 @@ class DLQuery
 
     public function describeTable($tableName)
     {
-        $this->_url = '/describe_table';
-        $this->_params['table_name'] = $tableName;
-
+        $this->_params['describe_table'] = $tableName;
         return $this; // method chaining
     }
 
@@ -410,9 +369,7 @@ class DLQuery
 
     public function dropIndex($indexName)
     {
-        $this->_url = '/drop_index';
-        $this->_params['index_name'] = $indexName;
-
+        $this->_params['drop_index'] = $indexName;
         return $this; // method chaining
     }
 
@@ -422,9 +379,7 @@ class DLQuery
 
     public function dropSchema($schemaName)
     {
-        $this->_url = '/drop_schema';
-        $this->_params['schema_name'] = $schemaName;
-
+        $this->_params['drop_schema'] = $schemaName;
         return $this; // method chaining
     }
 
@@ -434,9 +389,7 @@ class DLQuery
 
     public function dropTable($tableName)
     {
-        $this->_url = '/drop_table';
-        $this->_params['table_name'] = $tableName;
-
+        $this->_params['drop_table'] = $tableName;
         return $this; // method chaining
     }
 
@@ -446,16 +399,13 @@ class DLQuery
 
     public function insertInto($tableName)
     {
-        $this->_url = '/insert';
-        $this->_params['table_name'] = $tableName;
-
+        $this->_params['insert_into'] = $tableName;
         return $this; // method chaining
     }
 
     public function values($rows)
     {
         $this->_params['values'] = $rows;
-
         return $this; // method chaining
     }
 
@@ -465,65 +415,55 @@ class DLQuery
 
     public function select($columns)
     {
-        $this->_url = '/select';
         $this->_params['select'] = $columns;
-
         return $this; // method chaining
     }
 
     public function distinct($boolean)
     {
         $this->_params['distinct'] = $boolean;
-
         return $this; // method chaining
     }
 
     public function from($tables)
     {
         $this->_params['from'] = $tables;
-
         return $this; // method chaining
     }
 
     public function groupBy($columns)
     {
         $this->_params['group_by'] = $columns;
-
         return $this; // method chaining
     }
 
     public function having($expression)
     {
         $this->_params['having'] = $expression;
-
         return $this; // method chaining
     }
 
     public function limit($integer)
     {
         $this->_params['limit'] = $integer;
-
         return $this; // method chaining
     }
 
     public function offset($integer)
     {
         $this->_params['offset'] = $integer;
-
         return $this; // method chaining
     }
 
     public function orderBy($exprArray)
     {
         $this->_params['order_by'] = $exprArray;
-
         return $this; // method chaining
     }
 
     public function search($queryText)
     {
         $this->_params['search'] = $queryText;
-
         return $this; // method chaining
     }
 
@@ -533,8 +473,7 @@ class DLQuery
 
     public function showDatabases()
     {
-        $this->_url = '/show_databases';
-
+        $this->_params['show_databases'] = true;
         return $this; // method chaining
     }
 
@@ -544,8 +483,7 @@ class DLQuery
 
     public function showSchemas()
     {
-        $this->_url = '/show_schemas';
-
+        $this->_params['show_schemas'] = true;
         return $this; // method chaining
     }
 
@@ -555,8 +493,7 @@ class DLQuery
 
     public function showTables()
     {
-        $this->_url = '/show_tables';
-
+        $this->_params['show_tables'] = true;
         return $this; // method chaining
     }
 
@@ -566,18 +503,14 @@ class DLQuery
 
     public function update($tableName)
     {
-        $this->_url = '/update';
-        $this->_params['table_name'] = $tableName;
-
+        $this->_params['update'] = $tableName;
         return $this; // method chaining
     }
 
     public function set($map)
     {
         $this->_params['set'] = $map;
-
         return $this; // method chaining
     }
 }
-
 ?>

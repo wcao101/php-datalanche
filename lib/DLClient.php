@@ -52,8 +52,16 @@ class DLClient
             throw new Exception('$query = NULL');
         }
 
-        $url = $this->_url . $query->getUrl();
-        $body = $query->getParams();
+        $url = $this->_url;
+
+        $params = $query->getParams();
+        if (array_key_exists('database', $params) == true) {
+            $url .= '/' . urlencode((string)$params['database']);
+            unset($params['database']);
+        }
+
+        $url .= '/query';
+        $body = $params;
         $connection = curl_init();
 
         $options = array(
@@ -118,22 +126,22 @@ class DLClient
         return $result;
     }
 
-    /**
-    * parseCurlResult was built off the need to functionalize the parsing methods
-    * required to synthesize the headers and response body from the semi unhelpful datatype
-    * that the curl libraries return by default (a giant string).
-    * parseCurlResult explodes the results and requests into keyed arrays contained by
-    * a singular array which the user can then refrence to get request/response headers,
-    * general info, and response body content. This function also contains the json error
-    * check which is used to throw specific errors at the json_decode level.
-    *
-    * @access private
-    * @param string $curlResult the results of $this->handleResults(curl_exec($curlHandle)) [the response of the server to the request]
-    * @param array $curlInfo the results of $this->handleResults(curl_get_info($curlHandle)) POST execution of the handle
-    * @uses json_decode() the only place in client where this function is called and checked for errors
-    * @uses json_last_error() part of a switch which throws specific json errors
-    * @return array $statusArray is an array of arrays contating info about the curl response & request
-    */
+    //
+    // parseCurlResult was built off the need to functionalize the parsing methods
+    // required to synthesize the headers and response body from the semi unhelpful datatype
+    // that the curl libraries return by default (a giant string).
+    // parseCurlResult explodes the results and requests into keyed arrays contained by
+    // a singular array which the user can then refrence to get request/response headers,
+    // general info, and response body content. This function also contains the json error
+    // check which is used to throw specific errors at the json_decode level.
+    //
+    // @access private
+    // @param string $curlResult the results of $this->handleResults(curl_exec($curlHandle)) [the response of the server to the request]
+    // @param array $curlInfo the results of $this->handleResults(curl_get_info($curlHandle)) POST execution of the handle
+    // @uses json_decode() the only place in client where this function is called and checked for errors
+    // @uses json_last_error() part of a switch which throws specific json errors
+    // @return array $statusArray is an array of arrays contating info about the curl response & request
+    //
     private function parseCurlResult($curlInfo, $curlResult)
     {
         $statusArray = array();
@@ -143,7 +151,7 @@ class DLClient
         $statusArray['response']['header'] = array();
         $statusArray['response']['body'] = array();
 
-        //Seperate the header from the body in the return string and store both
+        // Seperate the header from the body in the return string and store both
         $responseHeader = substr($curlResult, 0, $curlInfo['header_size']);
         $responseBody = substr($curlResult, $curlInfo['header_size']);
         $responseHeader = explode("\n", $responseHeader);
@@ -154,29 +162,23 @@ class DLClient
         foreach ($responseHeader as $value) {
             $middle = explode(":", $value);
             if (count($middle) <= 1) {
-                /*
-                * The explode function has returned an empty row result
-                * which means that the current slot is porbably part of
-                * the whitespace returned in the response. This happens when
-                * the curl library appends the header is appended to the response string.
-                * Therefore skip appending it to the content array
-                * and move to the next value slot.
-                */
+                // The explode function has returned an empty row result
+                // which means that the current slot is porbably part of
+                // the whitespace returned in the response. This happens when
+                // the curl library appends the header is appended to the response string.
+                // Therefore skip appending it to the content array
+                // and move to the next value slot.
             } else {
                 $statusArray['response']['header'][trim($middle[0])] = trim($middle[1]);
             }
         }
 
-        /*
-        * Decode the response body and recursivley set any objects to assosiative arrays.
-        */ 
+        // Decode the response body and recursivley set any objects to assosiative arrays.
         $responseBody = json_decode($responseBody, true);
 
-        /*
-        * Check for errors related to json decoding,
-        * this helps to isolate specific errors with
-        * json responses from the server.
-        */
+        // Check for errors related to json decoding,
+        // this helps to isolate specific errors with
+        // json responses from the server.
         switch (json_last_error()) {
             case JSON_ERROR_DEPTH:
                 throw new Exception('JSON error: Maximum stack depth has been exceeded');
@@ -206,11 +208,9 @@ class DLClient
         $statusArray['response']['body'] = $responseBody;
         $statusArray['response']['header']['http_code'] = $curlInfo['http_code'];
 
-        /*
-        * We move to do the same process again but this time on the request headers
-        * we won't have to parse for a json body this time either, so the 
-        * process is a bit shorter.
-        */
+        // We move to do the same process again but this time on the request headers
+        // we won't have to parse for a json body this time either, so the 
+        // process is a bit shorter.
 
         $requestHeader = explode("\n", $curlInfo['request_header']);
         $statusArray['request']['header']['operation'] = explode(" ", $requestHeader[0]);
@@ -224,7 +224,7 @@ class DLClient
 
             $middle = explode(":", $value);
             if (count($middle) <= 1) {
-                //the explode function has created a white-space entry
+                // the explode function has created a white-space entry
             } else {
                 $statusArray['request']['header'][trim($middle[0])] = trim($middle[1]);
             }
