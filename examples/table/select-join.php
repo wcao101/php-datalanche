@@ -14,7 +14,7 @@ try {
     $client = new DLClient('YOUR_API_KEY', 'YOUR_API_SECRET');
 
     $q = new DLQuery('my_database');
-    $q->select('*');
+    $q->selectAll();
     $q->from($q->expr(
         $q->table('t1'),
         '$join', $q->table('t2'), '$on', $q->column('t1.c1'), '=', $q->column('t2.c1'),

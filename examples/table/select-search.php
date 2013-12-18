@@ -15,7 +15,7 @@ try {
     $client = new DLClient('YOUR_API_KEY', 'YOUR_API_SECRET');
 
     $q = new DLQuery('my_database');
-    $q->select('*')->from('my_schema.my_table')->search('hello world');
+    $q->selectAll()->from('my_schema.my_table')->search('hello world');
 
     $result = $client->query($q);
 

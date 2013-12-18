@@ -419,6 +419,12 @@ class DLQuery
         return $this; // method chaining
     }
 
+    public function selectAll()
+    {
+        $this->_params['select'] = true;
+        return $this; // method chaining
+    }
+
     public function distinct($boolean)
     {
         $this->_params['distinct'] = $boolean;
