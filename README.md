@@ -1,11 +1,11 @@
 php-datalanche
 ==============
 
-Official PHP client for [Datalanche's](https://www.datalanche.com) REST API.
+Official PHP client for [Datalanche](https://www.datalanche.com).
 
 ## Install
 
-[Create an account](https://www.datalanche.com/signup) and obtain an API key and secret. Then install the client.
+[Create an account](https://www.datalanche.com/account/signup) and obtain an API key and secret. Then install the client.
 
 ### Composer
 
