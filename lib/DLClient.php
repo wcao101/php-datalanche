@@ -10,7 +10,7 @@ class DLClient
     private $_url;
     private $_verifySsl;
 
-    public function __construct($key, $secret, $host, $port, $verifySsl)
+    public function __construct($key, $secret, $host = NULL, $port = NULL, $verifySsl = true)
     {
         $this->_authKey = '';
         $this->_authSecret = '';
@@ -71,7 +71,10 @@ class DLClient
             CURLOPT_FORBID_REUSE => false,
             CURLOPT_HEADER => true,
             CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
-            CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
+            CURLOPT_HTTPHEADER => array(
+                'Accept-Encoding: gzip',
+                'Content-Type: application/json'
+            ),
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => json_encode($body),
             CURLOPT_RETURNTRANSFER => true,
@@ -81,20 +84,21 @@ class DLClient
             CURLOPT_URL => $url,
             CURLOPT_USERAGENT => 'Datalanche PHP Client',
             CURLOPT_USERPWD => $this->_authKey . ':' . $this->_authSecret,
-            CURLOPT_VERBOSE => false
+            CURLOPT_VERBOSE => true
         );
-        curl_setopt($connection, $options);
+        curl_setopt_array($connection, $options);
 
         $curlResult = curl_exec($connection);
+        $curlErrno = curl_errno($connection);
         $curlError = curl_error($connection);
         $curlInfo = curl_getinfo($connection);
         curl_close($connection);
 
         if ($curlResult === false) {
-            throw new Exception('cURL error: ' . $curlError);
+            throw new Exception('cURL error[' . $curlErrno . ']: ' . $curlError);
         }
 
-        $result = $this->parseResult($curlInfo, $curlResult);
+        $result = $this->parseResult($curlInfo, $curlResult, $body);
         $httpStatus = $result['response']['http_status'];
 
         if ($httpStatus < 200 || $httpStatus > 300) {
@@ -104,16 +108,16 @@ class DLClient
         return $result;
     }
 
-    private function parseResult($curlInfo, $curlResult)
+    private function parseResult($curlInfo, $curlResult, $reqBody)
     {
         $curlResult = $this->parseCurlResult($curlInfo, $curlResult);
         
         $result = array(
             'request' => array(
                 'method' => $curlResult['request']['header']['operation'],
-                'url' => $curlResult['curl_info_array']['url'],
+                'url' => $curlInfo['url'],
                 'headers' => $curlResult['request']['header'],
-                'body' => $curlResult['request']['header']['url_parameters']
+                'body' => $reqBody
             ),
             'response' => array(
                 'http_status' => $curlResult['response']['header']['http_code'],
@@ -122,6 +126,14 @@ class DLClient
             ),
             'data' => $curlResult['response']['body']
         );
+
+        // cleanup headers
+        unset($result['request']['headers']['http_version']);
+        unset($result['request']['headers']['operation']);
+        unset($result['request']['headers']['url_parameters']);
+
+        unset($result['response']['headers']['http_code']);
+        unset($result['response']['headers']['status']);
 
         return $result;
     }
@@ -176,7 +188,7 @@ class DLClient
         // Decode the response body and recursivley set any objects to assosiative arrays.
         $responseBody = json_decode($responseBody, true);
 
-        // Check for errors related to json decoding,
+        // Check for JSON decoding errors related to json decoding,
         // this helps to isolate specific errors with
         // json responses from the server.
         switch (json_last_error()) {
