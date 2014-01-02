@@ -9,7 +9,7 @@
 //     col3 integer DEFAULT 0 NOT NULL
 // );
 //
-require_once(dirname(__FILE__) . '/../Datalanche.php');
+require_once(dirname(__FILE__) . '/../../Datalanche.php');
 
 try {
 

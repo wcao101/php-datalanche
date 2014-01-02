@@ -5,7 +5,7 @@
 // equivalent SQL:
 // DELETE FROM my_schema.my_table WHERE col3 = 'hello';
 //
-require_once(dirname(__FILE__) . '/../Datalanche.php');
+require_once(dirname(__FILE__) . '/../../Datalanche.php');
 
 try {
 

@@ -2,7 +2,7 @@
 //
 // Show the given table's details. Must have read access for the given database.
 //
-require_once(dirname(__FILE__) . '/../Datalanche.php');
+require_once(dirname(__FILE__) . '/../../Datalanche.php');
 
 try {
 

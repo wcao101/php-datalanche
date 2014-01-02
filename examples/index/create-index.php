@@ -5,7 +5,7 @@
 // equivalent SQL:
 // CREATE UNIQUE INDEX my_index ON my_schema.my_table USING btree (col1, col2);
 //
-require_once(dirname(__FILE__) . '/../Datalanche.php');
+require_once(dirname(__FILE__) . '/../../Datalanche.php');
 
 try {
 

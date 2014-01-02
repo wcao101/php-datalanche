@@ -8,7 +8,7 @@
 // NOTE: Search clause is sent to ElasticSearch. The search
 // results are used as a filter when executing the SQL query.
 //
-require_once(dirname(__FILE__) . '/../Datalanche.php');
+require_once(dirname(__FILE__) . '/../../Datalanche.php');
 
 try {
 

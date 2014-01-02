@@ -9,7 +9,7 @@
 //     ORDER BY col1 ASC, col2 DESC
 //     OFFSET 0 LIMIT 10;
 //
-require_once(dirname(__FILE__) . '/../Datalanche.php');
+require_once(dirname(__FILE__) . '/../../Datalanche.php');
 
 try {
 

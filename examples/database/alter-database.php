@@ -5,7 +5,7 @@
 // equivalent SQL:
 // ALTER DATABASE my_database RENAME TO my_new_database;
 //
-require_once(dirname(__FILE__) . '/../Datalanche.php');
+require_once(dirname(__FILE__) . '/../../Datalanche.php');
 
 try {
 

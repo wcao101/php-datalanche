@@ -5,7 +5,7 @@
 // equivalent SQL:
 // UPDATE my_schema.my_table SET col3 = 'hello world' WHERE col3 = 'hello';
 //
-require_once(dirname(__FILE__) . '/../Datalanche.php');
+require_once(dirname(__FILE__) . '/../../Datalanche.php');
 
 try {
 

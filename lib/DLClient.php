@@ -10,7 +10,7 @@ class DLClient
     private $_url;
     private $_verifySsl;
 
-    public function __construct($key, $secret, $host = NULL, $port = NULL, $verifySsl = true)
+    public function __construct($key = NULL, $secret = NULL, $host = NULL, $port = NULL, $verifySsl = true)
     {
         $this->_authKey = '';
         $this->_authSecret = '';
@@ -18,7 +18,7 @@ class DLClient
         $this->_verifySsl = $verifySsl;
 
         if ($host != NULL) {
-            $this->_url = 'https://' . host;
+            $this->_url = 'https://' . $host;
         }
 
         if ($port != NULL) {

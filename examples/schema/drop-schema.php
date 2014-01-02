@@ -5,7 +5,7 @@
 // equivalent SQL:
 // DROP SCHEMA my_schema CASCADE;
 //
-require_once(dirname(__FILE__) . '/../Datalanche.php');
+require_once(dirname(__FILE__) . '/../../Datalanche.php');
 
 try {
 

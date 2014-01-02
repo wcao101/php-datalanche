@@ -4,7 +4,7 @@ class DLQuery
 {
     private $_params;
 
-    public function __construct($databaseName)
+    public function __construct($databaseName = NULL)
     {
         $this->_params = array();
         if ($databaseName != NULL) {

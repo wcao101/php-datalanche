@@ -5,7 +5,7 @@
 // equivalent SQL:
 // ALTER INDEX my_schema.my_index RENAME TO my_new_index;
 //
-require_once(dirname(__FILE__) . '/../Datalanche.php');
+require_once(dirname(__FILE__) . '/../../Datalanche.php');
 
 try {
 
