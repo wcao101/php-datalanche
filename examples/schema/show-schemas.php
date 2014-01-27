@@ -8,7 +8,7 @@ try {
 
     $client = new DLClient('YOUR_API_KEY', 'YOUR_API_SECRET');
 
-    $q = new DLQuery();
+    $q = new DLQuery('my_database');
     $q->showSchemas();
 
     $result = $client->query($q);

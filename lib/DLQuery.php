@@ -191,6 +191,12 @@ class DLQuery
         return $this; // method chaining
     }
 
+    public function maxSizeGB($integer)
+    {
+        $this->_params['max_size_gb'] = $integer;
+        return $this; // method chaining
+    }
+
     //
     // ALTER INDEX
     //
