@@ -421,6 +421,10 @@ class DLQuery
 
     public function select($columns)
     {
+        if ($columns === '*') {
+            throw new Exception('please use selectAll() instead of select("*")');
+        }
+
         $this->_params['select'] = $columns;
         return $this; // method chaining
     }
