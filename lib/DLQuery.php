@@ -249,12 +249,15 @@ class DLQuery
         return $this; // method chaining
     }
 
-    public function dropColumn($columnName)
+    public function dropColumn($columnName, $cascade = false)
     {
         if (array_key_exists('drop_columns', $this->_params) === false) {
             $this->_params['drop_columns'] = array();
         }
-        array_push($this->_params['drop_columns'], $columnName);
+        $column = new stdClass();
+        $column->name = $columnName;
+        $column->cascade = $cascade;
+        array_push($this->_params['drop_columns'], $column);
 
         return $this; // method chaining
     }
