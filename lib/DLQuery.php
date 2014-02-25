@@ -289,12 +289,6 @@ class DLQuery
         return $this; // method chaining
     }
 
-    public function method($text)
-    {
-        $this->_params['method'] = $text;
-        return $this; // method chaining
-    }
-
     public function onTable($tableName)
     {
         $this->_params['on_table'] = $tableName;
@@ -304,6 +298,12 @@ class DLQuery
     public function unique($boolean)
     {
         $this->_params['unique'] = $boolean;
+        return $this; // method chaining
+    }
+
+    public function usingMethod($text)
+    {
+        $this->_params['using_method'] = $text;
         return $this; // method chaining
     }
 
