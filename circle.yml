@@ -4,6 +4,9 @@ machine:
   timezone:
     UTC # Set the timezone to UTC
 
+  hosts: # change the host to external
+    api.datalanche.com: 50.19.4.47
+
 ## Customize test commands
 test:
   override:
