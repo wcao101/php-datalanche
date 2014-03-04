@@ -28,6 +28,7 @@ try {
 
 } catch (DLException $e) {
     echo $e . "\n";
+    exit(1);
 } catch (Exception $ex) {
     echo $ex . "\n";
 }
