@@ -13,7 +13,13 @@ require_once(dirname(__FILE__) . '/../../Datalanche.php');
 
 try {
 
-    $client = new DLClient('YOUR_API_KEY', 'YOUR_API_SECRET');
+    $config = json_decode(file_get_contents(dirname(__FILE__) . '/../config.json'));
+
+    //Please find your API credentials here: https://www.datalanche.com/account before use
+    $YOUR_API_KEY = $config -> api_key;
+    $YOUR_API_SECRET = $config -> api_secret;
+
+    $client = new DLClient($YOUR_API_KEY, $YOUR_API_SECRET);
 
     $q = new DLQuery('my_database');
     $q->createTable('my_schema.my_table');
@@ -28,8 +34,7 @@ try {
         ),
         'col2' => array(
             'data_type' => array(
-                'name' => 'varchar',
-                'args' => array(50)
+                'name' => 'timestamptz'
             ),
             'description' => 'col2 description text',
             'default_value' => NULL,
@@ -37,12 +42,20 @@ try {
         ),
         'col3' => array(
             'data_type' => array(
-                'name' => 'integer'
+                'name' => 'text'
             ),
             'description' => 'col3 description text',
-            'default_value' => 0,
+            'default_value' => 'default_text',
             'not_null' => true
+        ),
+        'col4' => array(
+            'data_type' => array(
+                'name' => 'varchar',
+                'args' => array(50)
+            ),
+            'description' => 'col4 description text'
         )
+
     ));
 
     $client->query($q);
